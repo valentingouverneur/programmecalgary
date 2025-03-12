@@ -23,7 +23,10 @@ export const useAuth = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      // Pour le développement, permettre une connexion sans email complet
+      const formattedEmail = email.includes('@') ? email : `${email}@test.com`
+      
+      const userCredential = await signInWithEmailAndPassword(auth, formattedEmail, password)
       return userCredential.user
     } catch (error) {
       console.error('Erreur de connexion:', error)
@@ -33,7 +36,10 @@ export const useAuth = () => {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      // Pour le développement, permettre une création sans email complet
+      const formattedEmail = email.includes('@') ? email : `${email}@test.com`
+      
+      const userCredential = await createUserWithEmailAndPassword(auth, formattedEmail, password)
       return userCredential.user
     } catch (error) {
       console.error('Erreur d\'inscription:', error)
