@@ -33,8 +33,8 @@ export default function WorkoutPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-sm">
-          <h1 className="text-2xl font-bold mb-8 text-center">
-            Programme Calgary Barbell
+          <h1 className="font-roboto-mono text-2xl md:text-4xl tracking-[.15em] md:tracking-[.25em] uppercase font-bold text-center mb-8">
+            STUDIO 101
           </h1>
           <div className="bg-card rounded-2xl p-6">
             <AuthForm />
