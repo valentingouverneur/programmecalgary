@@ -12,32 +12,36 @@ export default function Home() {
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8">
-          Programme Calgary Barbell
-        </h1>
-        <AuthForm />
+        <div className="max-w-md mx-auto bg-card rounded-lg shadow-lg p-8">
+          <h1 className="text-4xl font-bold text-center mb-8 text-foreground">
+            Programme Calgary Barbell
+          </h1>
+          <AuthForm />
+        </div>
       </div>
     )
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold">
+      <div className="flex justify-between items-center mb-12">
+        <h1 className="text-4xl font-bold text-foreground">
           Programme Calgary Barbell
         </h1>
-        <Button variant="ghost" onClick={logout}>
-          <LogOut className="w-5 h-5 mr-2" />
+        <Button variant="outline" onClick={logout} className="flex items-center gap-2">
+          <LogOut className="w-5 h-5" />
           Déconnexion
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         <Link 
           href="/workout"
-          className="block p-6 bg-card hover:bg-card/90 rounded-lg shadow-lg transition-colors"
+          className="group block p-8 bg-card hover:bg-card/90 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
         >
-          <h2 className="text-2xl font-semibold mb-2">Entraînement du Jour</h2>
+          <h2 className="text-2xl font-semibold mb-3 text-foreground group-hover:text-primary">
+            Entraînement du Jour
+          </h2>
           <p className="text-muted-foreground">
             Accédez à votre programme d'entraînement quotidien et suivez vos progrès.
           </p>
@@ -45,9 +49,11 @@ export default function Home() {
 
         <Link 
           href="/settings"
-          className="block p-6 bg-card hover:bg-card/90 rounded-lg shadow-lg transition-colors"
+          className="group block p-8 bg-card hover:bg-card/90 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
         >
-          <h2 className="text-2xl font-semibold mb-2">Paramètres</h2>
+          <h2 className="text-2xl font-semibold mb-3 text-foreground group-hover:text-primary">
+            Paramètres
+          </h2>
           <p className="text-muted-foreground">
             Configurez vos 1RMs et personnalisez votre expérience.
           </p>
@@ -55,9 +61,11 @@ export default function Home() {
 
         <Link 
           href="/history"
-          className="block p-6 bg-card hover:bg-card/90 rounded-lg shadow-lg transition-colors"
+          className="group block p-8 bg-card hover:bg-card/90 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
         >
-          <h2 className="text-2xl font-semibold mb-2">Historique</h2>
+          <h2 className="text-2xl font-semibold mb-3 text-foreground group-hover:text-primary">
+            Historique
+          </h2>
           <p className="text-muted-foreground">
             Consultez vos performances passées et suivez votre progression.
           </p>
@@ -65,9 +73,11 @@ export default function Home() {
 
         <Link 
           href="/program"
-          className="block p-6 bg-card hover:bg-card/90 rounded-lg shadow-lg transition-colors"
+          className="group block p-8 bg-card hover:bg-card/90 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
         >
-          <h2 className="text-2xl font-semibold mb-2">Programme Complet</h2>
+          <h2 className="text-2xl font-semibold mb-3 text-foreground group-hover:text-primary">
+            Programme Complet
+          </h2>
           <p className="text-muted-foreground">
             Visualisez et modifiez votre programme d'entraînement.
           </p>

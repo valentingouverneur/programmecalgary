@@ -3,23 +3,27 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AlertCircle } from 'lucide-react'
 
 export function AuthForm() {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const { signIn, signUp } = useAuth()
+  const { signIn: login, signUp: signup } = useAuth()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
 
     try {
       if (isLogin) {
-        await signIn(email, password)
+        await login(email, password)
       } else {
-        await signUp(email, password)
+        await signup(email, password)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue')
@@ -27,60 +31,55 @@ export function AuthForm() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-card rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold text-center mb-6">
-        {isLogin ? 'Connexion' : 'Inscription'}
-      </h2>
-
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-md text-sm">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md bg-background"
-            required
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="votre@email.com"
+          required
+          className="w-full"
+        />
+      </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            Mot de passe
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md bg-background"
-            required
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Mot de passe</Label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          required
+          className="w-full"
+        />
+      </div>
 
-        <Button type="submit" className="w-full">
-          {isLogin ? 'Se connecter' : 'S\'inscrire'}
-        </Button>
+      <Button type="submit" className="w-full">
+        {isLogin ? 'Se connecter' : "S'inscrire"}
+      </Button>
 
-        <div className="text-center mt-4">
-          <button
-            type="button"
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-sm text-muted-foreground hover:underline"
-          >
-            {isLogin ? 'Pas encore de compte ? S\'inscrire' : 'Déjà un compte ? Se connecter'}
-          </button>
-        </div>
-      </form>
-    </div>
+      <div className="text-center text-sm">
+        <button
+          type="button"
+          onClick={() => setIsLogin(!isLogin)}
+          className="text-primary hover:underline"
+        >
+          {isLogin
+            ? "Pas encore de compte ? S'inscrire"
+            : 'Déjà un compte ? Se connecter'}
+        </button>
+      </div>
+    </form>
   )
 } 
