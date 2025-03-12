@@ -17,7 +17,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        'archivo-black': ['var(--font-archivo-black)'],
+        'roboto-mono': ['var(--font-roboto-mono)'],
       },
       colors: {
         border: "hsl(var(--border))",

@@ -13,7 +13,7 @@ export function Header() {
         <div className="mr-4 flex">
           <a href="/" className="flex items-center space-x-2">
             <Dumbbell className="h-6 w-6" />
-            <span className="font-archivo-black text-xl tracking-tight">STUDIO 101</span>
+            <span className="font-roboto-mono text-xl tracking-widest uppercase">STUDIO 101</span>
           </a>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">

@@ -1,14 +1,14 @@
 import '@/styles/globals.css'
 import type { Metadata } from 'next'
-import { Inter, Archivo_Black } from 'next/font/google'
+import { Inter, Roboto_Mono } from 'next/font/google'
 import { Providers } from './providers'
 import { ToastViewport } from '@/components/ui/toast'
 
 const inter = Inter({ subsets: ['latin'] })
-const archivoblack = Archivo_Black({ 
-  weight: '400',
+const robotoMono = Roboto_Mono({ 
+  weight: '700',
   subsets: ['latin'],
-  variable: '--font-archivo-black',
+  variable: '--font-roboto-mono',
 })
 
 export const metadata: Metadata = {
@@ -26,7 +26,7 @@ export default function RootLayout({
       <head>
         <title>Studio 101</title>
       </head>
-      <body className={`${inter.className} ${archivoblack.variable} min-h-screen bg-background text-foreground antialiased`}>
+      <body className={`${inter.className} ${robotoMono.variable} min-h-screen bg-background text-foreground antialiased`}>
         <Providers>
           {children}
           <ToastViewport />
