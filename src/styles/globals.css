@@ -4,10 +4,10 @@
  
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 98%;
     --foreground: 240 10% 3.9%;
  
-    --card: 240 4% 95%;
+    --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
  
     --popover: 0 0% 100%;
@@ -16,10 +16,10 @@
     --primary: 238 84% 67%;
     --primary-foreground: 0 0% 100%;
  
-    --secondary: 240 4% 95%;
-    --secondary-foreground: 240 10% 3.9%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
  
-    --muted: 240 4% 95%;
+    --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
  
     --accent: 238 84% 67%;
@@ -32,7 +32,7 @@
     --input: 240 5.9% 90%;
     --ring: 238 84% 67%;
  
-    --radius: 1rem;
+    --radius: 0.75rem;
   }
 }
  
@@ -42,6 +42,16 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-[#6366F1] hover:bg-[#4F46E5] text-white;
+  }
+  
+  .btn-outline {
+    @apply border-[#6366F1] text-[#6366F1] hover:bg-[#6366F1]/5;
   }
 }
 
