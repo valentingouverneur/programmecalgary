@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 
 export function AuthForm() {
   const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const { signIn: login, signUp: signup } = useAuth()
@@ -17,6 +17,7 @@ export function AuthForm() {
     setError('')
 
     try {
+      const email = username.includes('@') ? username : `${username}@test.com`
       if (isLogin) {
         await login(email, password)
       } else {
@@ -37,10 +38,10 @@ export function AuthForm() {
 
       <div className="space-y-3">
         <Input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Nom d'utilisateur"
           required
           className="bg-secondary rounded-xl h-12"
         />
