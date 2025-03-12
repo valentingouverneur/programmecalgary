@@ -6,6 +6,7 @@ import { Dumbbell, User, BarChart3, Dumbbell as Exercise, Calendar, Settings } f
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { ImportProgram } from '@/components/programs/ImportProgram'
 
 export default function DashboardPage() {
   const { user, logout } = useAuth()
@@ -108,13 +109,17 @@ export default function DashboardPage() {
 
           <div className="p-6">
             {activeTab === 'programs' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h3 className="font-medium">Programme Calgary Barbell</h3>
-                    <p className="text-sm text-gray-500">16 semaines · 4 jours par semaine</p>
+              <div className="space-y-8">
+                <ImportProgram />
+                <div className="space-y-4">
+                  <h3 className="font-medium">Programmes existants</h3>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <h3 className="font-medium">Programme Calgary Barbell</h3>
+                      <p className="text-sm text-gray-500">16 semaines · 4 jours par semaine</p>
+                    </div>
+                    <Button variant="outline">Modifier</Button>
                   </div>
-                  <Button variant="outline">Modifier</Button>
                 </div>
               </div>
             )}
