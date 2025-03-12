@@ -3,7 +3,7 @@
 import { useAuth } from '@/lib/hooks/useAuth'
 import { AuthForm } from '@/components/auth/AuthForm'
 import { Button } from '@/components/ui/button'
-import { Timer, Calculator, Check, MoreVertical, PlayCircle } from 'lucide-react'
+import { Timer, Check, MoreVertical, PlayCircle } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState } from 'react'
 
@@ -38,7 +38,7 @@ export default function WorkoutPage() {
         </Button>
       </div>
 
-      <main className="p-4">
+      <main className="p-4 pb-24">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold mb-1">Programme Calgary Barbell</h1>
           <p className="text-gray-500">Semaine 1 · Jour 1</p>
@@ -148,14 +148,10 @@ export default function WorkoutPage() {
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t grid grid-cols-2 gap-4">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t">
           <Button variant="outline" className="w-full flex items-center justify-center space-x-2 text-[#6366F1] border-[#6366F1]">
             <Timer className="w-5 h-5" />
             <span>Rest Timer</span>
-          </Button>
-          <Button variant="outline" className="w-full flex items-center justify-center space-x-2 text-[#6366F1] border-[#6366F1]">
-            <Calculator className="w-5 h-5" />
-            <span>Plate Calculator</span>
           </Button>
         </div>
       </main>
