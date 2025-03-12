@@ -1,4 +1,4 @@
-export type Exercise = {
+export interface Exercise {
   name: string
   sets: number
   reps: string // ex: "8-10" ou "5"
@@ -7,17 +7,17 @@ export type Exercise = {
   notes?: string
 }
 
-export type Day = {
+export interface Day {
   number: number
   exercises: Exercise[]
 }
 
-export type Week = {
+export interface Week {
   number: number
   days: Day[]
 }
 
-export type Program = {
+export interface Program {
   name: string
   weeks: Week[]
 } 

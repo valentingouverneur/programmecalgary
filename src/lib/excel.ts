@@ -1,5 +1,7 @@
 import { utils, write, read } from 'xlsx'
 import type { Program, Week, Day, Exercise } from '@/types/program'
+import fs from 'fs'
+import path from 'path'
 
 const TEMPLATE_STRUCTURE = {
   headers: [
@@ -100,4 +102,80 @@ export function parseExcel(file: File): Promise<Program> {
     reader.onerror = () => reject(new Error('Erreur lors de la lecture du fichier'))
     reader.readAsArrayBuffer(file)
   })
+}
+
+export function importCalgaryProgram(): Program {
+  // Lire le fichier Excel
+  const filePath = path.join(process.cwd(), 'Copie de Calgary Barbell 16 Week (Revised) LB + KG _ LiftVault.com.xlsx')
+  const fileData = fs.readFileSync(filePath)
+  const workbook = read(fileData)
+  
+  const weeks: Week[] = []
+  let currentWeek = 1
+  
+  // Pour chaque bloc de semaines
+  const weekBlocks = ['Weeks 1-4', 'Weeks 5-8', 'Weeks 9-11', 'Weeks 12-15']
+  weekBlocks.forEach(blockName => {
+    const worksheet = workbook.Sheets[blockName]
+    if (!worksheet) {
+      throw new Error(`Feuille manquante: ${blockName}`)
+    }
+    
+    const rawData = utils.sheet_to_json<any>(worksheet, { header: 'A' })
+    
+    // Trouver les colonnes pour chaque semaine
+    const weekColumns: { [key: number]: string[] } = {}
+    const headerRow = rawData[0]
+    
+    Object.entries(headerRow).forEach(([col, value]) => {
+      if (value && typeof value === 'string' && value.toLowerCase().includes('week')) {
+        const weekNum = parseInt(value.match(/\d+/)?.[0] || '0')
+        if (!weekColumns[weekNum]) {
+          weekColumns[weekNum] = []
+        }
+        weekColumns[weekNum].push(col)
+      }
+    })
+    
+    // Pour chaque semaine dans le bloc
+    Object.keys(weekColumns).forEach(weekNumStr => {
+      const weekNum = parseInt(weekNumStr)
+      const columns = weekColumns[weekNum]
+      const exercises: Exercise[] = []
+      
+      // Parcourir les lignes pour trouver les exercices
+      for (let i = 2; i < rawData.length; i++) {
+        const row = rawData[i]
+        if (!row.A) continue // Ignorer les lignes vides
+        
+        const exercise: Exercise = {
+          name: row.A,
+          sets: parseInt(row.B) || 0,
+          reps: row.C?.toString() || '',
+          intensity: row.D ? parseInt(row.D) : undefined,
+          notes: `${row.E || ''} ${row.F || ''} ${row.G || ''}`.trim()
+        }
+        
+        if (exercise.name && exercise.name !== 'Exercise') {
+          exercises.push(exercise)
+        }
+      }
+      
+      if (exercises.length > 0) {
+        weeks.push({
+          number: currentWeek,
+          days: [{
+            number: 1,
+            exercises
+          }]
+        })
+        currentWeek++
+      }
+    })
+  })
+  
+  return {
+    name: 'Programme Calgary Barbell',
+    weeks
+  }
 } 
