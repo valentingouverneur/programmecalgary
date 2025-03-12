@@ -1,90 +1,104 @@
 'use client'
 
-import { useState } from 'react'
-import { ExerciseCard } from '@/components/workout/ExerciseCard'
-import { RestTimer } from '@/components/workout/RestTimer'
+import { useAuth } from '@/lib/hooks/useAuth'
+import { AuthForm } from '@/components/auth/AuthForm'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import Link from 'next/link'
 
-// Mock data - à remplacer par les données réelles de la base de données
-const mockWorkout = {
-  id: '1',
-  date: new Date(),
-  exercises: [
-    {
-      id: '1',
-      exerciseId: 'Squat',
-      sets: [
-        { id: '1', weight: 100, reps: 5, completed: false },
-        { id: '2', weight: 100, reps: 5, completed: false },
-        { id: '3', weight: 100, reps: 5, completed: false },
-      ],
-      notes: 'Focus sur la profondeur et le contrôle',
-    },
-    {
-      id: '2',
-      exerciseId: 'Bench Press',
-      sets: [
-        { id: '4', weight: 80, reps: 5, completed: false },
-        { id: '5', weight: 80, reps: 5, completed: false },
-        { id: '6', weight: 80, reps: 5, completed: false },
-      ],
-    },
-  ],
-  completed: false,
-}
-
 export default function WorkoutPage() {
-  const [workout, setWorkout] = useState(mockWorkout)
-  const [showRestTimer, setShowRestTimer] = useState(false)
+  const { user, logout } = useAuth()
 
-  const handleExerciseComplete = (exerciseId: string) => {
-    setShowRestTimer(true)
-  }
-
-  const handleRestComplete = () => {
-    setShowRestTimer(false)
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-bold mb-8 text-center">
+            Programme Calgary Barbell
+          </h1>
+          <div className="bg-card rounded-2xl p-6">
+            <AuthForm />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center mb-8">
-        <Link href="/">
-          <Button variant="ghost" size="icon" className="mr-4">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold">Entraînement du Jour</h1>
-      </div>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 bg-background/80 backdrop-blur-sm border-b z-50">
+        <div className="flex justify-between items-center p-4">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-xl font-semibold">
+              Entraînement du Jour
+            </h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Link href="/settings">
+              <Button variant="ghost" size="sm" className="text-sm">
+                Paramètres
+              </Button>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={logout} className="text-sm">
+              <LogOut className="w-4 h-4 mr-2" />
+              Déconnexion
+            </Button>
+          </div>
+        </div>
+      </header>
 
-      <div className="space-y-6 max-w-2xl mx-auto">
-        {workout.exercises.map((exercise) => (
-          <ExerciseCard
-            key={exercise.id}
-            exercise={exercise}
-            onComplete={handleExerciseComplete}
-          />
-        ))}
-      </div>
+      <main className="container max-w-lg mx-auto p-4">
+        <div className="bg-card rounded-2xl p-6 mb-4">
+          <h2 className="text-lg font-medium mb-4">Semaine 1 - Jour 1</h2>
+          
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-base font-medium">Squat</h3>
+              <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span>Échauffement</span>
+                  <span>5 × 60kg</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Série 1</span>
+                  <span>5 × 80kg</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Série 2</span>
+                  <span>5 × 90kg</span>
+                </div>
+              </div>
+            </div>
 
-      {showRestTimer && (
-        <RestTimer
-          duration={180}
-          onComplete={handleRestComplete}
-        />
-      )}
+            <div className="space-y-4">
+              <h3 className="text-base font-medium">Bench Press</h3>
+              <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span>Échauffement</span>
+                  <span>5 × 40kg</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Série 1</span>
+                  <span>5 × 60kg</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Série 2</span>
+                  <span>5 × 70kg</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <div className="mt-8 flex justify-center">
-        <Button
-          size="lg"
-          onClick={() => {
-            // Logique pour terminer l'entraînement
-          }}
-        >
-          Terminer l'entraînement
-        </Button>
-      </div>
+        <div className="flex justify-between">
+          <Link href="/history">
+            <Button variant="outline">Historique</Button>
+          </Link>
+          <Link href="/program">
+            <Button variant="outline">Programme Complet</Button>
+          </Link>
+        </div>
+      </main>
     </div>
   )
 } 
