@@ -30,19 +30,19 @@ export function AuthForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="text-sm text-red-500 mb-4">
+        <div className="text-sm text-destructive mb-4">
           {error}
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
           required
-          className="bg-secondary"
+          className="bg-secondary rounded-xl h-12"
         />
 
         <Input
@@ -51,18 +51,18 @@ export function AuthForm() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Mot de passe"
           required
-          className="bg-secondary"
+          className="bg-secondary rounded-xl h-12"
         />
       </div>
 
-      <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+      <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl h-12">
         {isLogin ? 'Se connecter' : "S'inscrire"}
       </Button>
 
       <button
         type="button"
         onClick={() => setIsLogin(!isLogin)}
-        className="text-sm text-muted-foreground hover:text-primary w-full text-center mt-2"
+        className="text-sm text-accent hover:text-accent/90 w-full text-center mt-2"
       >
         {isLogin
           ? "Pas encore de compte ? S'inscrire"
