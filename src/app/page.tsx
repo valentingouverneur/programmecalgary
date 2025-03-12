@@ -1,20 +1,36 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect } from 'react'
-import { auth } from '@/lib/firebase'
+import { useAuth } from '@/lib/hooks/useAuth'
+import { AuthForm } from '@/components/auth/AuthForm'
+import { Button } from '@/components/ui/button'
+import { LogOut } from 'lucide-react'
 
 export default function Home() {
-  useEffect(() => {
-    // Simple test de la configuration Firebase
-    console.log('Firebase Auth initialized:', !!auth)
-  }, [])
+  const { user, logout } = useAuth()
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold text-center mb-8">
+          Programme Calgary Barbell
+        </h1>
+        <AuthForm />
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-center mb-8">
-        Programme Calgary Barbell
-      </h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold">
+          Programme Calgary Barbell
+        </h1>
+        <Button variant="ghost" onClick={logout}>
+          <LogOut className="w-5 h-5 mr-2" />
+          Déconnexion
+        </Button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         <Link 
