@@ -5,11 +5,27 @@ import { AuthForm } from '@/components/auth/AuthForm'
 import { Button } from '@/components/ui/button'
 import { Timer, Check, MoreVertical, PlayCircle } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function WorkoutPage() {
   const { user, logout } = useAuth()
   const [timer, setTimer] = useState('00:00')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = setTimeout(() => {
+      setLoading(false)
+    }, 1000)
+    return () => clearTimeout(checkAuth)
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6366F1]"></div>
+      </div>
+    )
+  }
 
   if (!user) {
     return (
