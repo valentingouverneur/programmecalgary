@@ -3,9 +3,10 @@
 import { useAuth } from '@/lib/hooks/useAuth'
 import { AuthForm } from '@/components/auth/AuthForm'
 import { Button } from '@/components/ui/button'
-import { Timer, Check, MoreVertical, PlayCircle } from 'lucide-react'
+import { Timer, Check, MoreVertical, PlayCircle, Dumbbell, User } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
 export default function WorkoutPage() {
   const { user, logout } = useAuth()
@@ -44,6 +45,21 @@ export default function WorkoutPage() {
 
   return (
     <div className="min-h-screen bg-background select-none">
+      <div className="bg-white border-b">
+        <div className="max-w-3xl mx-auto px-4">
+          <div className="flex justify-between items-center h-14">
+            <Link href="/" className="flex items-center space-x-2 text-[#6366F1]">
+              <Dumbbell className="w-6 h-6" />
+              <span className="font-medium">Calgary Barbell</span>
+            </Link>
+            <Link href="/dashboard" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+              <User className="w-5 h-5" />
+              <span>Dashboard</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center p-4 bg-white border-b">
           <div className="flex items-center space-x-2">
