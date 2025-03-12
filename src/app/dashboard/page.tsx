@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { Button } from '@/components/ui/button'
-import { Timer, Check, MoreVertical, PlayCircle, Dumbbell, User } from 'lucide-react'
+import { Timer, Check, MoreVertical, PlayCircle, Dumbbell, User, ChevronDown } from 'lucide-react'
 import { ProgramsTab } from '@/components/dashboard/ProgramsTab'
 import { Header } from '@/components/layout/Header'
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('programs')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const renderTab = () => {
     switch (activeTab) {
@@ -31,12 +32,25 @@ export default function DashboardPage() {
         <Header />
         <div className="container mx-auto p-4">
           <div className="flex flex-col md:flex-row gap-4">
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              className="md:hidden w-full flex items-center justify-between mb-2"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              Menu
+              <ChevronDown className={`h-4 w-4 transition-transform ${isMobileMenuOpen ? 'rotate-180' : ''}`} />
+            </Button>
+
             {/* Sidebar */}
-            <div className="w-full md:w-64 space-y-2">
+            <div className={`w-full md:w-64 space-y-2 ${isMobileMenuOpen ? 'block' : 'hidden md:block'}`}>
               <Button
                 variant={activeTab === 'programs' ? 'default' : 'ghost'}
                 className="w-full justify-start"
-                onClick={() => setActiveTab('programs')}
+                onClick={() => {
+                  setActiveTab('programs')
+                  setIsMobileMenuOpen(false)
+                }}
               >
                 <Dumbbell className="h-4 w-4 mr-2" />
                 Programmes
@@ -44,7 +58,10 @@ export default function DashboardPage() {
               <Button
                 variant={activeTab === 'exercises' ? 'default' : 'ghost'}
                 className="w-full justify-start"
-                onClick={() => setActiveTab('exercises')}
+                onClick={() => {
+                  setActiveTab('exercises')
+                  setIsMobileMenuOpen(false)
+                }}
               >
                 <PlayCircle className="h-4 w-4 mr-2" />
                 Exercices
@@ -52,7 +69,10 @@ export default function DashboardPage() {
               <Button
                 variant={activeTab === 'stats' ? 'default' : 'ghost'}
                 className="w-full justify-start"
-                onClick={() => setActiveTab('stats')}
+                onClick={() => {
+                  setActiveTab('stats')
+                  setIsMobileMenuOpen(false)
+                }}
               >
                 <Timer className="h-4 w-4 mr-2" />
                 Statistiques
@@ -60,7 +80,10 @@ export default function DashboardPage() {
               <Button
                 variant={activeTab === 'settings' ? 'default' : 'ghost'}
                 className="w-full justify-start"
-                onClick={() => setActiveTab('settings')}
+                onClick={() => {
+                  setActiveTab('settings')
+                  setIsMobileMenuOpen(false)
+                }}
               >
                 <User className="h-4 w-4 mr-2" />
                 Paramètres

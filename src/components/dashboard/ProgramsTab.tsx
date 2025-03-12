@@ -56,17 +56,21 @@ export function ProgramsTab() {
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {programs.map((program: ProgramWithId) => (
             <Card 
               key={program.id} 
               className="p-4 hover:bg-muted/50 transition-colors cursor-pointer"
               onClick={() => {/* TODO: Ajouter la visualisation/édition du programme */}}
             >
-              <h3 className="text-xl font-semibold mb-2">{program.name}</h3>
-              <p className="text-muted-foreground">
-                {program.weeks.length} semaines, {program.weeks.reduce((acc: number, week) => acc + week.days.length, 0)} jours
-              </p>
+              <div className="flex flex-col">
+                <h3 className="text-xl font-semibold mb-2">{program.name}</h3>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span>{program.weeks.length} semaines</span>
+                  <span>•</span>
+                  <span>{program.weeks.reduce((acc: number, week) => acc + week.days.length, 0)} jours</span>
+                </div>
+              </div>
             </Card>
           ))}
         </div>

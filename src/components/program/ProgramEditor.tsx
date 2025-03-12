@@ -157,17 +157,18 @@ export function ProgramEditor({ onSave }: ProgramEditorProps) {
 
   return (
     <div className="container mx-auto p-4 space-y-4">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <Input
           value={program.name}
           onChange={(e) => setProgram(prev => ({ ...prev, name: e.target.value }))}
-          className="text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-0 px-0"
+          className="text-xl sm:text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-0 px-0 w-full sm:w-auto"
         />
-        <div className="flex gap-2">
-          <Button onClick={addWeek} size="sm">
-            Ajouter une semaine
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button onClick={addWeek} size="sm" className="flex-1 sm:flex-none">
+            <Plus className="h-4 w-4 mr-2" />
+            Semaine
           </Button>
-          <Button onClick={saveProgram} size="sm" variant="default">
+          <Button onClick={saveProgram} size="sm" variant="default" className="flex-1 sm:flex-none">
             Sauvegarder
           </Button>
         </div>
@@ -220,33 +221,35 @@ export function ProgramEditor({ onSave }: ProgramEditorProps) {
                                       <div {...provided.dragHandleProps}>
                                         <GripVertical className="cursor-move text-muted-foreground" />
                                       </div>
-                                      <div className="flex-1 grid grid-cols-6 gap-4">
+                                      <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4">
                                         <Input
                                           value={exercise.name}
                                           onChange={(e) => updateExercise(weekIndex, dayIndex, exerciseIndex, { name: e.target.value })}
-                                          className="col-span-2"
+                                          className="md:col-span-2"
                                           placeholder="Nom de l'exercice"
                                         />
-                                        <Input
-                                          type="number"
-                                          value={exercise.sets}
-                                          onChange={(e) => updateExercise(weekIndex, dayIndex, exerciseIndex, { sets: parseInt(e.target.value) })}
-                                          className="w-20"
-                                          placeholder="Séries"
-                                        />
-                                        <Input
-                                          value={exercise.reps}
-                                          onChange={(e) => updateExercise(weekIndex, dayIndex, exerciseIndex, { reps: e.target.value })}
-                                          className="w-20"
-                                          placeholder="Reps"
-                                        />
-                                        <Input
-                                          type="number"
-                                          value={exercise.intensity}
-                                          onChange={(e) => updateExercise(weekIndex, dayIndex, exerciseIndex, { intensity: parseInt(e.target.value) })}
-                                          className="w-20"
-                                          placeholder="%1RM"
-                                        />
+                                        <div className="grid grid-cols-3 md:grid-cols-1 gap-4 md:gap-0">
+                                          <Input
+                                            type="number"
+                                            value={exercise.sets}
+                                            onChange={(e) => updateExercise(weekIndex, dayIndex, exerciseIndex, { sets: parseInt(e.target.value) })}
+                                            className="w-full"
+                                            placeholder="Séries"
+                                          />
+                                          <Input
+                                            value={exercise.reps}
+                                            onChange={(e) => updateExercise(weekIndex, dayIndex, exerciseIndex, { reps: e.target.value })}
+                                            className="w-full"
+                                            placeholder="Reps"
+                                          />
+                                          <Input
+                                            type="number"
+                                            value={exercise.intensity}
+                                            onChange={(e) => updateExercise(weekIndex, dayIndex, exerciseIndex, { intensity: parseInt(e.target.value) })}
+                                            className="w-full"
+                                            placeholder="%1RM"
+                                          />
+                                        </div>
                                         <Input
                                           value={exercise.notes}
                                           onChange={(e) => updateExercise(weekIndex, dayIndex, exerciseIndex, { notes: e.target.value })}

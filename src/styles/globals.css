@@ -38,10 +38,13 @@
  
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border select-none;
   }
   body {
     @apply bg-background text-foreground antialiased;
+  }
+  input, textarea {
+    @apply select-text;
   }
 }
 
