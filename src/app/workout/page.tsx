@@ -43,7 +43,7 @@ export default function WorkoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background select-none">
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center p-4 bg-white border-b">
           <div className="flex items-center space-x-2">
@@ -62,7 +62,7 @@ export default function WorkoutPage() {
             <div className="mt-4">
               <Input 
                 placeholder="Add notes here..." 
-                className="w-full bg-gray-50 border-gray-200"
+                className="w-full bg-gray-50 border-gray-200 select-text"
               />
             </div>
           </div>
@@ -96,10 +96,10 @@ export default function WorkoutPage() {
                         <td className="p-4">75 kg × 5</td>
                         <td className="p-4">8-10 reps</td>
                         <td className="p-4">
-                          <Input className="w-20" />
+                          <Input className="w-20 select-text" />
                         </td>
                         <td className="p-4">
-                          <Input className="w-20" />
+                          <Input className="w-20 select-text" />
                         </td>
                         <td className="p-4">
                           <div className="w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center">
@@ -144,10 +144,10 @@ export default function WorkoutPage() {
                         <td className="p-4">-</td>
                         <td className="p-4">10-12 reps</td>
                         <td className="p-4">
-                          <Input className="w-20" />
+                          <Input className="w-20 select-text" />
                         </td>
                         <td className="p-4">
-                          <Input className="w-20" />
+                          <Input className="w-20 select-text" />
                         </td>
                         <td className="p-4">
                           <div className="w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center">
