@@ -43,4 +43,77 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+}
+
+@layer utilities {
+  .step {
+    counter-increment: step;
+  }
+
+  .step:before {
+    @apply absolute w-9 h-9 bg-muted rounded-full font-mono font-medium text-center text-base inline-flex items-center justify-center -indent-px;
+    @apply ml-[-50px] mt-[-4px];
+    content: counter(step);
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: var(--tw-enter-opacity, 1);
+    transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0) scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), var(--tw-enter-scale, 1)) rotate(var(--tw-enter-rotate, 0));
+  }
+}
+
+@keyframes exit {
+  to {
+    opacity: var(--tw-exit-opacity, 1);
+    transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
+  }
+}
+
+.animate-in {
+  animation: enter 150ms ease-out;
+}
+.animate-out {
+  animation: exit 150ms ease-in;
+}
+
+.fade-in {
+  --tw-enter-opacity: 0;
+}
+.fade-out {
+  --tw-exit-opacity: 0;
+}
+
+.slide-in-from-top {
+  --tw-enter-translate-y: -100%;
+}
+.slide-in-from-bottom {
+  --tw-enter-translate-y: 100%;
+}
+.slide-out-to-top {
+  --tw-exit-translate-y: -100%;
+}
+.slide-out-to-bottom {
+  --tw-exit-translate-y: 100%;
+}
+
+.zoom-in {
+  --tw-enter-scale: .9;
+}
+.zoom-out {
+  --tw-exit-scale: .9;
+}
+
+.spin-in {
+  --tw-enter-rotate: -30deg;
+}
+.spin-out {
+  --tw-exit-rotate: 30deg;
 } 
