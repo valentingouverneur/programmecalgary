@@ -1,6 +1,15 @@
+'use client'
+
 import Link from 'next/link'
+import { useEffect } from 'react'
+import { auth } from '@/lib/firebase'
 
 export default function Home() {
+  useEffect(() => {
+    // Simple test de la configuration Firebase
+    console.log('Firebase Auth initialized:', !!auth)
+  }, [])
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold text-center mb-8">
