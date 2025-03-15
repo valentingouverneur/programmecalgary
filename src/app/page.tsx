@@ -9,12 +9,19 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { useActiveProgram } from '@/lib/hooks/useActiveProgram'
+import { AuthenticatedLayout } from '@/components/layout/AuthenticatedLayout'
+import { db } from '@/lib/firebase'
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore'
+import { ExerciseMax } from '@/types/user'
+import { getMainExercise } from '@/lib/exerciseMapping'
 
 export default function Home() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [timer, setTimer] = useState('00:00')
   const { activeProgram, maxScores, loading: activeProgramLoading } = useActiveProgram()
+  const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})
+  const [setValues, setSetValues] = useState<Record<string, { weight: number; reps: number }[]>>({})
 
   useEffect(() => {
     const checkAuth = setTimeout(() => {
@@ -23,21 +30,117 @@ export default function Home() {
     return () => clearTimeout(checkAuth)
   }, [])
 
-  const calculateWeight = (exercise: any) => {
-    if (!exercise.weight) return null
-    
-    if (exercise.weight.type === 'fixed') {
-      return exercise.weight.value
+  // Charger les séries complétées au chargement
+  useEffect(() => {
+    const loadCompletedSets = async () => {
+      if (!user || !activeProgram) return
+
+      try {
+        const workoutRef = doc(db, 'users', user.uid, 'workouts', new Date().toISOString().split('T')[0])
+        const workoutDoc = await getDoc(workoutRef)
+        
+        if (workoutDoc.exists()) {
+          const data = workoutDoc.data()
+          const sets = data.sets || []
+          
+          // Convertir les séries en état local
+          const newCompletedSets: Record<string, boolean[]> = {}
+          const newSetValues: Record<string, { weight: number; reps: number }[]> = {}
+          
+          sets.forEach((set: any) => {
+            const exerciseIndex = activeProgram.weeks[0].days[0].exercises.findIndex(
+              ex => ex.name === set.exerciseName
+            )
+            if (exerciseIndex !== -1) {
+              const exerciseKey = `exercise_${exerciseIndex}`
+              
+              // Marquer la série comme complétée
+              if (!newCompletedSets[exerciseKey]) {
+                newCompletedSets[exerciseKey] = []
+              }
+              newCompletedSets[exerciseKey][set.setNumber - 1] = true
+              
+              // Sauvegarder les valeurs
+              if (!newSetValues[exerciseKey]) {
+                newSetValues[exerciseKey] = []
+              }
+              newSetValues[exerciseKey][set.setNumber - 1] = {
+                weight: set.weight,
+                reps: set.reps
+              }
+            }
+          })
+          
+          setCompletedSets(newCompletedSets)
+          setSetValues(newSetValues)
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des séries complétées:', error)
+      }
     }
-    
-    // Chercher le maximum correspondant
-    const max = maxScores.find(m => 
-      m.exerciseName.toLowerCase() === exercise.name.toLowerCase()
-    )
-    
-    if (!max) return null
-    
-    return Math.round((max.maxWeight * exercise.weight.value) / 100)
+
+    loadCompletedSets()
+  }, [user, activeProgram])
+
+  const calculateWeight = (exercise: any) => {
+    const mainExercise = getMainExercise(exercise.name)
+    const maxWeight = maxScores.find(max => 
+      getMainExercise(max.exerciseName) === mainExercise
+    )?.maxWeight || 0
+
+    if (exercise.weight) {
+      if (exercise.weight.type === 'percentage') {
+        return Math.round((maxWeight * exercise.weight.value) / 100)
+      } else if (exercise.weight.type === 'rpe') {
+        return maxWeight // Pour l'instant, on retourne juste le max pour RPE
+      } else if (exercise.weight.type === 'kg') {
+        return exercise.weight.value
+      }
+    }
+    return 0
+  }
+
+  // Fonction pour valider une série
+  const validateSet = async (exerciseIndex: number, setIndex: number, weight: number, reps: number) => {
+    if (!user || !activeProgram) return
+
+    try {
+      // Mettre à jour l'état local
+      setCompletedSets(prev => {
+        const exerciseKey = `exercise_${exerciseIndex}`
+        const newSets = { ...prev }
+        if (!newSets[exerciseKey]) {
+          newSets[exerciseKey] = []
+        }
+        newSets[exerciseKey][setIndex] = true
+        return newSets
+      })
+
+      // Créer l'objet de données pour la série
+      const setData = {
+        exerciseName: activeProgram.weeks[0].days[0].exercises[exerciseIndex].name,
+        setNumber: setIndex + 1,
+        weight,
+        reps,
+        timestamp: Timestamp.now(),
+        programId: activeProgram.id,
+        week: 1,
+        day: 1
+      }
+
+      // Sauvegarder dans Firestore
+      const workoutRef = doc(db, 'users', user.uid, 'workouts', new Date().toISOString().split('T')[0])
+      await setDoc(workoutRef, {
+        programId: activeProgram.id,
+        week: 1,
+        day: 1,
+        sets: arrayUnion(setData)
+      }, { merge: true })
+
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de la série:', error)
+      // TODO: Afficher une notification d'erreur à l'utilisateur
+    }
   }
 
   if (loading) {
@@ -130,18 +233,50 @@ export default function Home() {
                           <td className="py-2">{setIndex + 1}</td>
                           <td className="py-2">-</td>
                           <td className="py-2">
-                            {exercise.reps}
+                            {exercise.reps} reps
                             {exercise.weight?.type === 'percentage' && ` @ ${exercise.weight.value}%`}
-                            {targetWeight && ` (${targetWeight}kg)`}
+                            {exercise.weight?.type === 'rpe' && ` @ RPE ${exercise.weight.value}`}
                           </td>
                           <td className="py-2">
-                            <input type="number" className="w-16 p-1 border rounded" />
+                            <input 
+                              id={`weight_${index}_${setIndex}`}
+                              type="number" 
+                              className={`w-16 p-1 border rounded ${
+                                completedSets[`exercise_${index}`]?.[setIndex] 
+                                  ? 'bg-muted text-muted-foreground'
+                                  : ''
+                              }`}
+                              defaultValue={setValues[`exercise_${index}`]?.[setIndex]?.weight || targetWeight || ''} 
+                              disabled={completedSets[`exercise_${index}`]?.[setIndex]}
+                            />
                           </td>
                           <td className="py-2">
-                            <input type="number" className="w-16 p-1 border rounded" />
+                            <input 
+                              id={`reps_${index}_${setIndex}`}
+                              type="number" 
+                              className={`w-16 p-1 border rounded ${
+                                completedSets[`exercise_${index}`]?.[setIndex] 
+                                  ? 'bg-muted text-muted-foreground'
+                                  : ''
+                              }`}
+                              defaultValue={setValues[`exercise_${index}`]?.[setIndex]?.reps || exercise.reps || ''} 
+                              disabled={completedSets[`exercise_${index}`]?.[setIndex]}
+                            />
                           </td>
                           <td className="py-2">
-                            <button className="px-3 py-1 border rounded hover:bg-muted">✓</button>
+                            <button 
+                              className="px-3 py-1 border rounded transition-colors duration-200 hover:bg-[#6366F1]/10 data-[state=checked]:bg-[#6366F1] data-[state=checked]:text-white"
+                              data-state={completedSets[`exercise_${index}`]?.[setIndex] ? 'checked' : 'unchecked'}
+                              onClick={() => {
+                                const weightInput = document.querySelector(`#weight_${index}_${setIndex}`) as HTMLInputElement
+                                const repsInput = document.querySelector(`#reps_${index}_${setIndex}`) as HTMLInputElement
+                                if (weightInput?.value && repsInput?.value) {
+                                  validateSet(index, setIndex, Number(weightInput.value), Number(repsInput.value))
+                                }
+                              }}
+                            >
+                              ✓
+                            </button>
                           </td>
                         </tr>
                       )
