@@ -6,13 +6,25 @@ import { ProgramTemplates } from '@/components/program/ProgramTemplates'
 import { AuthenticatedLayout } from '@/components/layout/AuthenticatedLayout'
 import { useRouter } from 'next/navigation'
 import { Program, ProgramTemplate } from '@/types/program'
+import { v4 as uuidv4 } from 'uuid'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 export default function CreateProgramPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<Program | null>(null)
   const router = useRouter()
+  const { user } = useAuth()
 
   const handleSelectTemplate = (template: ProgramTemplate) => {
-    setSelectedTemplate(template.program)
+    const now = new Date().toISOString()
+    setSelectedTemplate({
+      ...template.program,
+      id: uuidv4(),
+      createdBy: user?.uid || 'system',
+      createdAt: now,
+      updatedAt: now,
+      goal: template.goal,
+      equipment: template.equipment
+    })
   }
 
   const handleSave = () => {
