@@ -15,6 +15,7 @@ import { doc, getDoc, setDoc, updateDoc, arrayUnion, Timestamp } from 'firebase/
 import { ExerciseMax } from '@/types/user'
 import { getMainExercise } from '@/lib/exerciseMapping'
 import { WorkoutDialog } from '@/components/workout/WorkoutDialog'
+import { useSearchParams } from 'next/navigation'
 
 interface SetValue {
   weight: number
@@ -44,6 +45,9 @@ export default function Home() {
   const [workoutStartTime] = useState<Date>(new Date())
   const [incompleteSets, setIncompleteSets] = useState<Array<{ exerciseName: string, setsRemaining: number }>>([])
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | undefined>(undefined)
+  const searchParams = useSearchParams()
+  const currentWeek = Number(searchParams.get('week')) || 1
+  const currentDay = Number(searchParams.get('day')) || 1
 
   useEffect(() => {
     const checkAuth = setTimeout(() => {
@@ -264,8 +268,8 @@ export default function Home() {
       // Mettre à jour la progression du programme
       const userProgramRef = doc(db, 'users', user.uid, 'programs', activeProgram.id)
       await setDoc(userProgramRef, {
-        currentWeek: 1,
-        currentDay: 2,
+        currentWeek: currentWeek,
+        currentDay: currentDay + 1,
         lastUpdated: Timestamp.now()
       }, { merge: true })
 
@@ -289,9 +293,10 @@ export default function Home() {
   }
 
   const handleGoToNextDay = () => {
-    // TODO: Rediriger vers le jour suivant
     setDialogOpen(false)
-    window.location.reload()
+    // Rediriger vers le jour suivant avec les paramètres dans l'URL
+    const nextDay = 2 // Pour l'instant en dur car nous sommes au jour 1
+    window.location.href = `/workout?week=1&day=${nextDay}`
   }
 
   if (loading) {
@@ -337,7 +342,7 @@ export default function Home() {
                 {activeProgramLoading ? (
                   <div className="animate-pulse h-6 w-24 bg-muted rounded" />
                 ) : activeProgram ? (
-                  `Semaine 1, Jour 1`
+                  `Semaine ${currentWeek}, Jour ${currentDay}`
                 ) : (
                   "Créez ou sélectionnez un programme"
                 )}
