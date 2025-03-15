@@ -171,8 +171,8 @@ export default function Home() {
       <Header />
       <div className="max-w-7xl mx-auto">
         <div className="border-b">
-          <div className="max-w-7xl mx-auto p-4 flex justify-between items-center">
-            <div className="flex items-center gap-4">
+          <div className="max-w-7xl mx-auto p-4 flex justify-between items-start">
+            <div className="flex flex-col gap-1">
               <div className="text-2xl font-bold text-[#6366F1]">
                 {activeProgramLoading ? (
                   <div className="animate-pulse h-8 w-48 bg-muted rounded" />
@@ -182,7 +182,7 @@ export default function Home() {
                   "Aucun programme actif"
                 )}
               </div>
-              <div className="text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 {activeProgramLoading ? (
                   <div className="animate-pulse h-6 w-24 bg-muted rounded" />
                 ) : activeProgram ? (
@@ -209,81 +209,83 @@ export default function Home() {
         ) : activeProgram ? (
           <div className="p-4 space-y-6">
             {activeProgram.weeks[0].days[0].exercises.map((exercise, index) => (
-              <div key={index} className="border rounded-lg p-4">
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="text-lg font-semibold text-[#6366F1]">{index + 1}</span>
-                  <span className="text-lg font-semibold text-[#6366F1]">{exercise.name}</span>
+              <div key={index} className="border rounded-lg p-3 sm:p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-base font-semibold text-[#6366F1]">{index + 1}</span>
+                  <span className="text-base font-semibold text-[#6366F1]">{exercise.name}</span>
                 </div>
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left text-sm text-muted-foreground">
-                      <th className="pb-2">Série</th>
-                      <th className="pb-2">Précédent</th>
-                      <th className="pb-2">Objectif</th>
-                      <th className="pb-2">Kg</th>
-                      <th className="pb-2">Reps</th>
-                      <th className="pb-2"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.from({ length: Number(exercise.sets) }).map((_, setIndex) => {
-                      const targetWeight = calculateWeight(exercise)
-                      return (
-                        <tr key={setIndex} className="border-t">
-                          <td className="py-2">{setIndex + 1}</td>
-                          <td className="py-2">-</td>
-                          <td className="py-2">
-                            {exercise.reps} reps
-                            {exercise.weight?.type === 'percentage' && ` @ ${exercise.weight.value}%`}
-                            {exercise.weight?.type === 'rpe' && ` @ RPE ${exercise.weight.value}`}
-                          </td>
-                          <td className="py-2">
-                            <input 
-                              id={`weight_${index}_${setIndex}`}
-                              type="number" 
-                              className={`w-16 p-1 border rounded ${
-                                completedSets[`exercise_${index}`]?.[setIndex] 
-                                  ? 'bg-muted text-muted-foreground'
-                                  : ''
-                              }`}
-                              defaultValue={setValues[`exercise_${index}`]?.[setIndex]?.weight || targetWeight || ''} 
-                              disabled={completedSets[`exercise_${index}`]?.[setIndex]}
-                            />
-                          </td>
-                          <td className="py-2">
-                            <input 
-                              id={`reps_${index}_${setIndex}`}
-                              type="number" 
-                              className={`w-16 p-1 border rounded ${
-                                completedSets[`exercise_${index}`]?.[setIndex] 
-                                  ? 'bg-muted text-muted-foreground'
-                                  : ''
-                              }`}
-                              defaultValue={setValues[`exercise_${index}`]?.[setIndex]?.reps || exercise.reps || ''} 
-                              disabled={completedSets[`exercise_${index}`]?.[setIndex]}
-                            />
-                          </td>
-                          <td className="py-2">
-                            <button 
-                              className="px-3 py-1 border rounded transition-colors duration-200 hover:bg-[#6366F1]/10 data-[state=checked]:bg-[#6366F1] data-[state=checked]:text-white"
-                              data-state={completedSets[`exercise_${index}`]?.[setIndex] ? 'checked' : 'unchecked'}
-                              onClick={() => {
-                                const weightInput = document.querySelector(`#weight_${index}_${setIndex}`) as HTMLInputElement
-                                const repsInput = document.querySelector(`#reps_${index}_${setIndex}`) as HTMLInputElement
-                                if (weightInput?.value && repsInput?.value) {
-                                  validateSet(index, setIndex, Number(weightInput.value), Number(repsInput.value))
-                                }
-                              }}
-                            >
-                              ✓
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-                <button className="mt-4 text-sm text-[#6366F1]">+ Ajouter une série</button>
+                <div className="overflow-x-auto -mx-3 sm:mx-0">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-left text-xs sm:text-sm text-muted-foreground">
+                        <th className="pb-2 pl-3 sm:pl-0">Série</th>
+                        <th className="pb-2">Objectif</th>
+                        <th className="pb-2">Kg</th>
+                        <th className="pb-2">Reps</th>
+                        <th className="pb-2 pr-3 sm:pr-0"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: Number(exercise.sets) }).map((_, setIndex) => {
+                        const targetWeight = calculateWeight(exercise)
+                        return (
+                          <tr key={setIndex} className="border-t">
+                            <td className="py-2 pl-3 sm:pl-0 text-sm">{setIndex + 1}</td>
+                            <td className="py-2 text-sm whitespace-nowrap">
+                              {exercise.reps} reps
+                              {exercise.weight?.type === 'percentage' && ` @ ${exercise.weight.value}%`}
+                              {exercise.weight?.type === 'rpe' && ` @ RPE ${exercise.weight.value}`}
+                            </td>
+                            <td className="py-2">
+                              <input 
+                                id={`weight_${index}_${setIndex}`}
+                                type="number" 
+                                inputMode="decimal"
+                                className={`w-14 sm:w-16 p-1 border rounded text-sm ${
+                                  completedSets[`exercise_${index}`]?.[setIndex] 
+                                    ? 'bg-muted text-muted-foreground'
+                                    : ''
+                                }`}
+                                defaultValue={setValues[`exercise_${index}`]?.[setIndex]?.weight || targetWeight || ''} 
+                                disabled={completedSets[`exercise_${index}`]?.[setIndex]}
+                              />
+                            </td>
+                            <td className="py-2">
+                              <input 
+                                id={`reps_${index}_${setIndex}`}
+                                type="number"
+                                inputMode="numeric"
+                                className={`w-14 sm:w-16 p-1 border rounded text-sm ${
+                                  completedSets[`exercise_${index}`]?.[setIndex] 
+                                    ? 'bg-muted text-muted-foreground'
+                                    : ''
+                                }`}
+                                defaultValue={setValues[`exercise_${index}`]?.[setIndex]?.reps || exercise.reps || ''} 
+                                disabled={completedSets[`exercise_${index}`]?.[setIndex]}
+                              />
+                            </td>
+                            <td className="py-2 pr-3 sm:pr-0">
+                              <button 
+                                className="w-8 h-8 flex items-center justify-center border rounded transition-colors duration-200 hover:bg-[#6366F1]/10 data-[state=checked]:bg-[#6366F1] data-[state=checked]:text-white"
+                                data-state={completedSets[`exercise_${index}`]?.[setIndex] ? 'checked' : 'unchecked'}
+                                onClick={() => {
+                                  const weightInput = document.querySelector(`#weight_${index}_${setIndex}`) as HTMLInputElement
+                                  const repsInput = document.querySelector(`#reps_${index}_${setIndex}`) as HTMLInputElement
+                                  if (weightInput?.value && repsInput?.value) {
+                                    validateSet(index, setIndex, Number(weightInput.value), Number(repsInput.value))
+                                  }
+                                }}
+                              >
+                                ✓
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <button className="mt-3 text-sm text-[#6366F1]">+ Ajouter une série</button>
               </div>
             ))}
           </div>
