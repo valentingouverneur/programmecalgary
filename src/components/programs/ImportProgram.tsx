@@ -121,7 +121,7 @@ export function ImportProgram() {
                             <span className="text-gray-500">
                               {' '}
                               · {exercise.sets}×{exercise.reps}
-                              {exercise.rpe && ` @RPE${exercise.rpe}`}
+                              {exercise.weight?.type === 'rpe' && ` @RPE${exercise.weight.value}`}
                               {exercise.intensity && ` @${exercise.intensity}%`}
                             </span>
                           </div>
