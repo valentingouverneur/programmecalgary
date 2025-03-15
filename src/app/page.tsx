@@ -210,10 +210,11 @@ export default function Home() {
     
     activeProgram.weeks[0].days[0].exercises.forEach((exercise, index) => {
       const completedSetsCount = completedSets[`exercise_${index}`]?.filter(Boolean).length || 0
-      if (completedSetsCount < exercise.sets) {
+      const exerciseSets = Number(exercise.sets)
+      if (completedSetsCount < exerciseSets) {
         incompleteExercises.push({
           exerciseName: exercise.name,
-          setsRemaining: exercise.sets - completedSetsCount
+          setsRemaining: exerciseSets - completedSetsCount
         })
       }
     })
