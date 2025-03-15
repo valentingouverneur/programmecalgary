@@ -2,10 +2,9 @@ import '@/styles/globals.css'
 import type { Metadata } from 'next'
 import { Inter, Roboto_Mono } from 'next/font/google'
 import { Providers } from './providers'
-import { ToastViewport } from '@/components/ui/toast'
+import { ToastViewport, Toaster } from '@/components/ui/toast'
 import { ThemeProvider } from '@/components/ui/theme-provider'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { Toaster } from '@/components/ui/use-toast'
 
 const inter = Inter({ subsets: ['latin'] })
 const robotoMono = Roboto_Mono({ 
