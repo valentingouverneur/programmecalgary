@@ -10,11 +10,15 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import Link from 'next/link'
 import { Program } from '@/types/program'
 import { Plus } from 'lucide-react'
+import { useActiveProgram } from '@/lib/hooks/useActiveProgram'
+import { useToast } from '@/components/ui/use-toast'
 
 export default function ProgramsPage() {
   const { user } = useAuth()
+  const { activeProgram, setUserActiveProgram } = useActiveProgram()
   const [programs, setPrograms] = useState<(Program & { id: string })[]>([])
   const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
 
   useEffect(() => {
     const fetchPrograms = async () => {
@@ -37,6 +41,22 @@ export default function ProgramsPage() {
 
     fetchPrograms()
   }, [user])
+
+  const handleSetActive = async (programId: string) => {
+    try {
+      await setUserActiveProgram(programId)
+      toast({
+        title: "Programme actif mis à jour",
+        description: "Le programme a été défini comme actif avec succès.",
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la mise à jour du programme actif.",
+      })
+    }
+  }
 
   return (
     <AuthGuard>
@@ -69,14 +89,28 @@ export default function ProgramsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {programs.map(program => (
-                <Link key={program.id} href={`/programs/${program.id}`}>
-                  <Card className="p-4 hover:bg-muted/50 transition-colors cursor-pointer">
+                <Card key={program.id} className="p-4">
+                  <div className="flex flex-col h-full">
                     <h3 className="text-xl font-semibold mb-2">{program.name}</h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground flex-grow">
                       {program.weeks.length} semaines, {program.weeks.reduce((acc, week) => acc + week.days.length, 0)} jours
                     </p>
-                  </Card>
-                </Link>
+                    <div className="flex gap-2 mt-4">
+                      <Link href={`/programs/${program.id}`} className="flex-1">
+                        <Button variant="outline" className="w-full">
+                          Modifier
+                        </Button>
+                      </Link>
+                      <Button
+                        variant={program.id === activeProgram?.id ? "default" : "outline"}
+                        className="flex-1"
+                        onClick={() => handleSetActive(program.id)}
+                      >
+                        {program.id === activeProgram?.id ? "Actif" : "Définir actif"}
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
               ))}
             </div>
           )}

@@ -8,11 +8,13 @@ import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
+import { useActiveProgram } from '@/lib/hooks/useActiveProgram'
 
 export default function Home() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [timer, setTimer] = useState('00:00')
+  const { activeProgram, maxScores, loading: activeProgramLoading } = useActiveProgram()
 
   useEffect(() => {
     const checkAuth = setTimeout(() => {
@@ -20,6 +22,23 @@ export default function Home() {
     }, 1000)
     return () => clearTimeout(checkAuth)
   }, [])
+
+  const calculateWeight = (exercise: any) => {
+    if (!exercise.weight) return null
+    
+    if (exercise.weight.type === 'fixed') {
+      return exercise.weight.value
+    }
+    
+    // Chercher le maximum correspondant
+    const max = maxScores.find(m => 
+      m.exerciseName.toLowerCase() === exercise.name.toLowerCase()
+    )
+    
+    if (!max) return null
+    
+    return Math.round((max.maxWeight * exercise.weight.value) / 100)
+  }
 
   if (loading) {
     return (
@@ -45,150 +64,109 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background">
       <Header />
-      <div className="flex flex-col h-[calc(100vh-4rem)]">
-        {/* Header avec timer et bouton finish */}
+      <div className="max-w-7xl mx-auto">
         <div className="border-b">
           <div className="max-w-7xl mx-auto p-4 flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm">
-                <PlayCircle className="h-5 w-5 mr-2" />
-                00:00
-              </Button>
-            </div>
-            <Button className="bg-[#6366F1] hover:bg-[#4F46E5] text-white">
-              Finish
-            </Button>
-          </div>
-        </div>
-
-        {/* Contenu principal */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto p-4">
-            <h1 className="text-2xl font-semibold mb-2">Calgary Barbell (12 semaines)</h1>
-            <p className="text-muted-foreground mb-6">Week 1 · Day 1</p>
-
-            <div className="space-y-8">
-              {/* Bench Press */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium flex items-center">
-                    <span className="text-[#6366F1] mr-2">1</span>
-                    <span className="text-[#6366F1]">Bench Press (Barbell)</span>
-                  </h2>
-                  <Button variant="ghost" size="sm">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="bg-card rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Set</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Previous</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Target</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">kg</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Reps</th>
-                        <th className="text-center p-4 text-sm font-medium text-muted-foreground"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[1, 2, 3].map((set) => (
-                        <tr key={set} className="border-b last:border-0">
-                          <td className="p-4">{set}</td>
-                          <td className="p-4">75 kg × 5</td>
-                          <td className="p-4">8-10 reps</td>
-                          <td className="p-4">
-                            <Input type="number" className="w-20" />
-                          </td>
-                          <td className="p-4">
-                            <Input type="number" className="w-20" />
-                          </td>
-                          <td className="p-4 text-center">
-                            <Button variant="ghost" size="sm" className="rounded-full">
-                              <Check className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <div className="p-4 bg-muted/50">
-                    <Button variant="outline" className="w-full">
-                      + Add Set
-                    </Button>
-                  </div>
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="text-2xl font-bold text-[#6366F1]">
+                {activeProgramLoading ? (
+                  <div className="animate-pulse h-8 w-48 bg-muted rounded" />
+                ) : activeProgram ? (
+                  activeProgram.name
+                ) : (
+                  "Aucun programme actif"
+                )}
               </div>
-
-              {/* Shoulder Press */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium flex items-center">
-                    <span className="text-[#6366F1] mr-2">2</span>
-                    <span className="text-[#6366F1]">Shoulder Press (Machine)</span>
-                  </h2>
-                  <Button variant="ghost" size="sm">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="bg-card rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Set</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Previous</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Target</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">kg</th>
-                        <th className="text-left p-4 text-sm font-medium text-muted-foreground">Reps</th>
-                        <th className="text-center p-4 text-sm font-medium text-muted-foreground"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[1, 2, 3].map((set) => (
-                        <tr key={set} className="border-b last:border-0">
-                          <td className="p-4">{set}</td>
-                          <td className="p-4">-</td>
-                          <td className="p-4">10-12 reps</td>
-                          <td className="p-4">
-                            <Input type="number" className="w-20" />
-                          </td>
-                          <td className="p-4">
-                            <Input type="number" className="w-20" />
-                          </td>
-                          <td className="p-4 text-center">
-                            <Button variant="ghost" size="sm" className="rounded-full">
-                              <Check className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <div className="p-4 bg-muted/50">
-                    <Button variant="outline" className="w-full">
-                      + Add Set
-                    </Button>
-                  </div>
-                </div>
+              <div className="text-muted-foreground">
+                {activeProgramLoading ? (
+                  <div className="animate-pulse h-6 w-24 bg-muted rounded" />
+                ) : activeProgram ? (
+                  `Semaine 1, Jour 1`
+                ) : (
+                  "Créez ou sélectionnez un programme"
+                )}
               </div>
             </div>
+            <button className="text-[#6366F1] font-semibold">
+              Terminer
+            </button>
           </div>
         </div>
 
-        {/* Footer avec boutons */}
-        <div className="border-t p-4">
-          <div className="max-w-7xl mx-auto">
-            <Button variant="outline" className="w-full border-[#6366F1] text-[#6366F1]">
-              <Timer className="h-5 w-5 mr-2" />
-              Rest Timer
-            </Button>
+        {activeProgramLoading ? (
+          <div className="p-4">
+            <div className="animate-pulse space-y-4">
+              <div className="h-12 bg-muted rounded" />
+              <div className="h-48 bg-muted rounded" />
+              <div className="h-48 bg-muted rounded" />
+            </div>
           </div>
-        </div>
+        ) : activeProgram ? (
+          <div className="p-4 space-y-6">
+            {activeProgram.weeks[0].days[0].exercises.map((exercise, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-lg font-semibold text-[#6366F1]">{index + 1}</span>
+                  <span className="text-lg font-semibold text-[#6366F1]">{exercise.name}</span>
+                </div>
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-sm text-muted-foreground">
+                      <th className="pb-2">Série</th>
+                      <th className="pb-2">Précédent</th>
+                      <th className="pb-2">Objectif</th>
+                      <th className="pb-2">Kg</th>
+                      <th className="pb-2">Reps</th>
+                      <th className="pb-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: exercise.sets }).map((_, setIndex) => {
+                      const targetWeight = calculateWeight(exercise)
+                      return (
+                        <tr key={setIndex} className="border-t">
+                          <td className="py-2">{setIndex + 1}</td>
+                          <td className="py-2">-</td>
+                          <td className="py-2">
+                            {exercise.reps}
+                            {exercise.weight?.type === 'percentage' && ` @ ${exercise.weight.value}%`}
+                            {targetWeight && ` (${targetWeight}kg)`}
+                          </td>
+                          <td className="py-2">
+                            <input type="number" className="w-16 p-1 border rounded" />
+                          </td>
+                          <td className="py-2">
+                            <input type="number" className="w-16 p-1 border rounded" />
+                          </td>
+                          <td className="py-2">
+                            <button className="px-3 py-1 border rounded hover:bg-muted">✓</button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+                <button className="mt-4 text-sm text-[#6366F1]">+ Ajouter une série</button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4 text-center">
+            <p className="text-muted-foreground">Aucun programme actif</p>
+            <a href="/programs" className="text-[#6366F1] hover:underline">
+              Sélectionner un programme
+            </a>
+          </div>
+        )}
       </div>
-    </div>
+
+      <div className="fixed bottom-4 right-4">
+        <button className="bg-white border border-[#6366F1] text-[#6366F1] px-4 py-2 rounded-lg shadow-lg">
+          Rest Timer
+        </button>
+      </div>
+    </main>
   )
 } 

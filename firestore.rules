@@ -1,15 +1,55 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Fonction pour vérifier si l'utilisateur est authentifié
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Fonction pour vérifier si l'utilisateur est le propriétaire
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
     // Règles pour la collection users
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
     }
     
     // Règles pour la collection programs
     match /programs/{programId} {
-      allow read: if request.auth != null;
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isOwner(resource.data.createdBy);
+    }
+
+    // Règles pour la collection activePrograms
+    match /activePrograms/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // Règles pour la collection tasks
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isOwner(resource.data.userId);
+    }
+
+    // Règles pour la collection maxScores
+    match /maxScores/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    match /exercises/{exerciseId} {
+      allow read: if true;
       allow write: if request.auth != null;
+    }
+
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 } 

@@ -74,7 +74,7 @@
     @apply bg-background text-foreground antialiased;
   }
   input, textarea {
-    @apply select-text;
+    @apply select-text bg-white text-foreground;
   }
 }
 

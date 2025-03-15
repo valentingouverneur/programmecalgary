@@ -5,6 +5,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard'
 import { Button } from '@/components/ui/button'
 import { Timer, Check, MoreVertical, PlayCircle, Dumbbell, User, ChevronDown } from 'lucide-react'
 import { ProgramsTab } from '@/components/dashboard/ProgramsTab'
+import { SettingsTab } from '@/components/dashboard/SettingsTab'
 import { Header } from '@/components/layout/Header'
 
 export default function DashboardPage() {
@@ -20,7 +21,7 @@ export default function DashboardPage() {
       case 'stats':
         return <div>Statistiques</div>
       case 'settings':
-        return <div>Paramètres</div>
+        return <SettingsTab />
       default:
         return null
     }

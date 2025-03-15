@@ -1,10 +1,16 @@
 export interface Exercise {
   name: string
-  sets: number
+  sets: number | string
   reps: string // ex: "8-10" ou "5"
-  rpe?: number
-  intensity?: number // pourcentage du 1RM
+  intensity?: number
+  load?: number
+  tempo?: string
+  rest?: number
   notes?: string
+  weight?: {
+    type: 'percentage' | 'rpe' | 'kg'
+    value: number
+  }
 }
 
 export interface Day {
@@ -18,6 +24,30 @@ export interface Week {
 }
 
 export interface Program {
+  id: string
   name: string
+  description?: string
+  goal?: string
+  equipment?: string
   weeks: Week[]
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ProgramTemplate {
+  id: string
+  name: string
+  description: string
+  goal: string
+  equipment: string
+  category: string
+  difficulty: string
+  duration: number // en semaines
+  daysPerWeek: number
+  program: {
+    name: string
+    description: string
+    weeks: Week[]
+  }
 } 

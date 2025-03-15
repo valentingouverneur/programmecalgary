@@ -8,17 +8,37 @@ import {
 } from 'firebase/auth'
 import { auth } from '../firebase'
 
-export const useAuth = () => {
+export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user)
+    console.log('useAuth: Initialisation du listener d\'authentification')
+    
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        console.log('useAuth: État de l\'authentification changé: Utilisateur connecté', user.uid)
+        // Forcer le rafraîchissement du token
+        try {
+          await user.getIdToken(true)
+          setUser(user)
+        } catch (error) {
+          console.error('useAuth: Erreur lors du rafraîchissement du token:', error)
+          setUser(null)
+        }
+      } else {
+        console.log('useAuth: État de l\'authentification changé: Aucun utilisateur')
+        setUser(null)
+      }
       setLoading(false)
+      setInitialized(true)
     })
 
-    return unsubscribe
+    return () => {
+      console.log('useAuth: Nettoyage du listener d\'authentification')
+      unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
@@ -59,6 +79,7 @@ export const useAuth = () => {
   return {
     user,
     loading,
+    initialized,
     signIn,
     signUp,
     logout,

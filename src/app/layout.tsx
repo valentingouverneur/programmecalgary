@@ -3,6 +3,9 @@ import type { Metadata } from 'next'
 import { Inter, Roboto_Mono } from 'next/font/google'
 import { Providers } from './providers'
 import { ToastViewport } from '@/components/ui/toast'
+import { ThemeProvider } from '@/components/ui/theme-provider'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { Toaster } from '@/components/ui/use-toast'
 
 const inter = Inter({ subsets: ['latin'] })
 const robotoMono = Roboto_Mono({ 
@@ -27,10 +30,15 @@ export default function RootLayout({
         <title>Studio 101</title>
       </head>
       <body className={`${inter.className} ${robotoMono.variable} min-h-screen bg-background text-foreground antialiased`}>
-        <Providers>
-          {children}
-          <ToastViewport />
-        </Providers>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AuthProvider>
+            <Toaster />
+            <Providers>
+              {children}
+              <ToastViewport />
+            </Providers>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
