@@ -1,19 +1,15 @@
 'use client'
 
-import { useAuth } from '@/lib/hooks/useAuth'
-import { AuthForm } from '@/components/auth/AuthForm'
-import { Button } from '@/components/ui/button'
-import { Timer, Check, MoreVertical, PlayCircle, Calculator, ArrowLeft } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 import { useActiveProgram } from '@/lib/hooks/useActiveProgram'
-import { AuthenticatedLayout } from '@/components/layout/AuthenticatedLayout'
-import { db, auth } from '@/lib/firebase'
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore'
-import { ExerciseMax } from '@/types/user'
-import { getMainExercise } from '@/lib/exerciseMapping'
+import { db } from '@/lib/firebase'
+import { doc, getDoc, setDoc, arrayUnion, Timestamp } from 'firebase/firestore'
 import { WorkoutDialog } from '@/components/workout/WorkoutDialog'
+import { Button } from '@/components/ui/button'
+import { Timer } from 'lucide-react'
+import { getMainExercise } from '@/lib/exerciseMapping'
 
 interface SetValue {
   weight: number
@@ -35,40 +31,10 @@ interface WorkoutContentProps {
   user: any // TODO: Remplacer par le bon type d'utilisateur de Firebase
 }
 
-export default function Home() {
-  const { user, loading, initialized } = useAuth()
-
-  // Afficher le loader tant que l'authentification n'est pas initialisée
-  if (!initialized || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6366F1]"></div>
-      </div>
-    )
-  }
-
-  // Une fois initialisé, afficher le contenu approprié
-  return (
-    <>
-      {!user ? (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4">
-          <div className="w-full max-w-sm">
-            <h1 className="font-roboto-mono text-2xl md:text-4xl tracking-[.15em] md:tracking-[.25em] uppercase font-bold text-center mb-8">
-              STUDIO 101
-            </h1>
-            <div className="bg-card rounded-2xl p-6">
-              <AuthForm />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <WorkoutContent user={user} />
-      )}
-    </>
-  )
-}
-
-function WorkoutContent({ user }: WorkoutContentProps) {
+export function WorkoutContent({ user }: WorkoutContentProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [timer, setTimer] = useState('00:00')
   const { activeProgram, maxScores, loading: activeProgramLoading } = useActiveProgram()
@@ -79,13 +45,16 @@ function WorkoutContent({ user }: WorkoutContentProps) {
   const [workoutStartTime] = useState<Date>(new Date())
   const [incompleteSets, setIncompleteSets] = useState<Array<{ exerciseName: string, setsRemaining: number }>>([])
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | undefined>(undefined)
+  
+  const currentWeek = Number(searchParams.get('week')) || 1
+  const currentDay = Number(searchParams.get('day')) || 1
 
+  // Réinitialiser les états quand les paramètres changent
   useEffect(() => {
-    const checkAuth = setTimeout(() => {
-      setLoading(false)
-    }, 500)
-    return () => clearTimeout(checkAuth)
-  }, [])
+    setCompletedSets({})
+    setSetValues({})
+    loadCompletedSets()
+  }, [currentWeek, currentDay])
 
   // Mettre à jour le timer
   useEffect(() => {
@@ -115,7 +84,7 @@ function WorkoutContent({ user }: WorkoutContentProps) {
         const newSetValues: Record<string, SetValue[]> = {}
         
         sets.forEach((set: any) => {
-          const exerciseIndex = activeProgram.weeks[0].days[0].exercises.findIndex(
+          const exerciseIndex = activeProgram.weeks[currentWeek - 1].days[currentDay - 1].exercises.findIndex(
             ex => ex.name === set.exerciseName
           )
           if (exerciseIndex !== -1) {
@@ -162,6 +131,29 @@ function WorkoutContent({ user }: WorkoutContentProps) {
     return 0
   }
 
+  const handleGoToNextDay = () => {
+    setDialogOpen(false)
+    const nextDay = currentDay + 1
+    if (!activeProgram) return
+
+    if (nextDay <= activeProgram.weeks[currentWeek - 1].days.length) {
+      const params = new URLSearchParams()
+      params.set('week', currentWeek.toString())
+      params.set('day', nextDay.toString())
+      router.replace(`/workout?${params.toString()}`)
+    } else {
+      const nextWeek = currentWeek + 1
+      if (nextWeek <= activeProgram.weeks.length) {
+        const params = new URLSearchParams()
+        params.set('week', nextWeek.toString())
+        params.set('day', '1')
+        router.replace(`/workout?${params.toString()}`)
+      } else {
+        router.push('/dashboard')
+      }
+    }
+  }
+
   const validateSet = async (exerciseIndex: number, setIndex: number, weight: string | number, reps: string | number) => {
     if (!user || !activeProgram) return
 
@@ -195,10 +187,12 @@ function WorkoutContent({ user }: WorkoutContentProps) {
 
       // Sauvegarder dans Firestore
       const workoutRef = doc(db, 'users', user.uid, 'workouts', new Date().toISOString().split('T')[0])
-      const exercise = activeProgram.weeks[0].days[0].exercises[exerciseIndex]
+      const exercise = activeProgram.weeks[currentWeek - 1].days[currentDay - 1].exercises[exerciseIndex]
       
       await setDoc(workoutRef, {
         programId: activeProgram.id,
+        week: currentWeek,
+        day: currentDay,
         sets: arrayUnion({
           exerciseName: exercise.name,
           setNumber: setIndex + 1,
@@ -230,43 +224,10 @@ function WorkoutContent({ user }: WorkoutContentProps) {
     }, 0)
   }
 
-  const handleFinishClick = async () => {
-    if (!user || !activeProgram) return
-
-    // Vérifier les séries incomplètes
-    const incompleteExercises: Array<{ exerciseName: string, setsRemaining: number }> = []
-    
-    const currentExercises = activeProgram.weeks[0].days[0].exercises
-    currentExercises.forEach((exercise, index) => {
-      const exerciseKey = `exercise_${index}`
-      const completedSetsCount = completedSets[exerciseKey]?.filter(Boolean).length || 0
-      const totalSets = Number(exercise.sets)
-      
-      if (completedSetsCount < totalSets) {
-        incompleteExercises.push({
-          exerciseName: exercise.name,
-          setsRemaining: totalSets - completedSetsCount
-        })
-      }
-    })
-
-    if (incompleteExercises.length > 0) {
-      setIncompleteSets(incompleteExercises)
-      setIsFinishDialog(false)
-      setDialogOpen(true)
-      return
-    }
-
-    await finishWorkout()
-  }
-
   const finishWorkout = async (skipRemaining = false) => {
     if (!user || !activeProgram) return
 
     try {
-      const workoutRef = doc(db, 'users', user.uid, 'workouts', new Date().toISOString().split('T')[0])
-      
-      // Calculer les statistiques
       const duration = calculateWorkoutDuration()
       const totalVolume = calculateTotalVolume()
       const totalSets = Object.values(completedSets).reduce(
@@ -274,7 +235,6 @@ function WorkoutContent({ user }: WorkoutContentProps) {
         0
       )
 
-      // Créer le résumé
       const summary: WorkoutSummary = {
         duration,
         totalSets,
@@ -282,15 +242,11 @@ function WorkoutContent({ user }: WorkoutContentProps) {
         personalRecords: []
       }
 
-      // Vérifier que l'utilisateur est toujours connecté
-      if (!auth.currentUser) {
-        throw new Error('Utilisateur non connecté')
-      }
-
-      // Sauvegarder le workout
+      const workoutRef = doc(db, 'users', user.uid, 'workouts', new Date().toISOString().split('T')[0])
       await setDoc(workoutRef, {
         programId: activeProgram.id,
-        programName: activeProgram.name,
+        week: currentWeek,
+        day: currentDay,
         completedAt: Timestamp.now(),
         duration: duration,
         stats: {
@@ -300,7 +256,6 @@ function WorkoutContent({ user }: WorkoutContentProps) {
         }
       }, { merge: true })
 
-      // Afficher le résumé
       setWorkoutSummary(summary)
       setIsFinishDialog(true)
       setDialogOpen(true)
@@ -310,70 +265,38 @@ function WorkoutContent({ user }: WorkoutContentProps) {
     }
   }
 
-  const handleContinueWorkout = () => {
-    setDialogOpen(false)
-  }
+  // Rediriger vers la page workout si on est sur la racine
+  useEffect(() => {
+    if (pathname === '/') {
+      const params = new URLSearchParams()
+      params.set('week', currentWeek.toString())
+      params.set('day', currentDay.toString())
+      router.replace(`/workout?${params.toString()}`)
+    }
+  }, [pathname, currentWeek, currentDay])
 
-  const handleSkipRemaining = async () => {
-    await finishWorkout(true)
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6366F1]"></div>
-      </div>
-    )
-  }
-
-  if (activeProgramLoading) {
-    return (
-      <div className="p-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-12 bg-muted rounded" />
-          <div className="h-48 bg-muted rounded" />
-          <div className="h-48 bg-muted rounded" />
-        </div>
-      </div>
-    )
-  }
-
-  if (!activeProgram) {
-    return (
-      <div className="p-4 text-center">
-        <p className="text-muted-foreground">Aucun programme actif</p>
-        <a href="/programs" className="text-[#6366F1] hover:underline">
-          Sélectionner un programme
-        </a>
-      </div>
-    )
-  }
+  // Si on est sur la page workout sans paramètres, rediriger vers jour 1
+  useEffect(() => {
+    if (pathname === '/workout' && !searchParams.get('week') && !searchParams.get('day')) {
+      router.replace('/workout?week=1&day=1')
+    }
+  }, [pathname, searchParams])
 
   return (
     <main className="min-h-screen bg-background">
       <Header />
-      <div className="max-w-7xl mx-auto">
-        <div className="border-b">
-          <div className="max-w-7xl mx-auto p-4 flex justify-between items-start">
-            <div className="flex flex-col gap-1">
-              <div className="text-2xl font-bold text-[#6366F1]">
-                {activeProgram.name}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Semaine 1, Jour 1
-              </div>
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Jour {currentDay} - Semaine {currentWeek}</h1>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Timer className="w-5 h-5" />
+              <span className="font-mono">{timer}</span>
             </div>
-            <button 
-              className="px-4 py-2 rounded-lg transition-colors duration-200 bg-[#6366F1] hover:bg-[#6366F1]/90 text-white font-semibold"
-              onClick={handleFinishClick}
-            >
-              Terminer
-            </button>
           </div>
         </div>
-
-        <div className="p-4 space-y-6">
-          {activeProgram.weeks[0].days[0].exercises.map((exercise, exerciseIndex) => (
+        <div className="space-y-6">
+          {activeProgram?.weeks[currentWeek - 1].days[currentDay - 1].exercises.map((exercise, exerciseIndex) => (
             <div key={exerciseIndex} className="border rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-base font-semibold text-[#6366F1]">{exerciseIndex + 1}</span>
@@ -407,7 +330,7 @@ function WorkoutContent({ user }: WorkoutContentProps) {
                           </td>
                           <td className="py-2">
                             <input 
-                              type="number" 
+                              type="number"
                               inputMode="decimal"
                               className={`w-14 sm:w-16 p-1 border rounded text-sm ${
                                 isCompleted ? 'bg-muted text-muted-foreground' : ''
@@ -479,24 +402,54 @@ function WorkoutContent({ user }: WorkoutContentProps) {
             </div>
           ))}
         </div>
+        <div className="mt-8 flex justify-end">
+          <Button
+            onClick={() => {
+              if (!activeProgram) return
+              
+              const incompleteExercises: Array<{ exerciseName: string, setsRemaining: number }> = []
+              
+              activeProgram.weeks[currentWeek - 1].days[currentDay - 1].exercises.forEach((exercise, index) => {
+                const exerciseKey = `exercise_${index}`
+                const completedSetsCount = completedSets[exerciseKey]?.filter(Boolean).length || 0
+                const totalSets = Number(exercise.sets)
+                
+                if (completedSetsCount < totalSets) {
+                  incompleteExercises.push({
+                    exerciseName: exercise.name,
+                    setsRemaining: totalSets - completedSetsCount
+                  })
+                }
+              })
 
-        <WorkoutDialog
-          open={dialogOpen}
-          onClose={() => setDialogOpen(false)}
-          incompleteSets={incompleteSets}
-          onContinue={handleContinueWorkout}
-          onSkip={handleSkipRemaining}
-          onFinish={handleSkipRemaining}
-          isFinishDialog={isFinishDialog}
-          workoutSummary={workoutSummary}
-        />
-      </div>
+              if (incompleteExercises.length > 0) {
+                setIncompleteSets(incompleteExercises)
+                setIsFinishDialog(false)
+                setDialogOpen(true)
+                return
+              }
 
-      <div className="fixed bottom-4 right-4">
-        <button className="bg-white border border-[#6366F1] text-[#6366F1] px-4 py-2 rounded-lg shadow-lg">
-          Rest Timer
-        </button>
+              finishWorkout()
+            }}
+            className="bg-[#6366F1] hover:bg-[#6366F1]/90"
+          >
+            Terminer l'entraînement
+          </Button>
+        </div>
       </div>
+      <WorkoutDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        incompleteSets={incompleteSets}
+        onContinue={() => {
+          setDialogOpen(false)
+          setIsFinishDialog(false)
+        }}
+        onSkip={() => finishWorkout(true)}
+        onFinish={() => finishWorkout()}
+        isFinishDialog={isFinishDialog}
+        workoutSummary={workoutSummary}
+      />
     </main>
   )
-}
+} 

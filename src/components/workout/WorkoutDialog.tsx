@@ -107,35 +107,40 @@ export function WorkoutDialog({
             Il reste des séries non complétées
           </DialogDescription>
         </DialogHeader>
-        {incompleteSets && (
-          <ul className="list-disc list-inside text-sm text-muted-foreground">
-            {incompleteSets.map((exercise, index) => (
-              <li key={index}>
-                {exercise.exerciseName}: {exercise.setsRemaining} séries restantes
-              </li>
-            ))}
-          </ul>
-        )}
-        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+        <div className="py-4">
+          {incompleteSets && (
+            <ul className="list-disc list-inside text-sm text-muted-foreground">
+              {incompleteSets.map((exercise, index) => (
+                <li key={index}>
+                  {exercise.exerciseName}: {exercise.setsRemaining} séries restantes
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <Button
             variant="outline"
             onClick={onContinue}
+            size="sm"
           >
-            Continuer l'entraînement
+            Continuer
           </Button>
           <Button
             variant="outline"
             onClick={onSkip}
+            size="sm"
           >
-            Skip les séries restantes
+            Skip séries
           </Button>
           <Button
             onClick={onFinish}
+            size="sm"
             className="bg-[#6366F1] hover:bg-[#6366F1]/90"
           >
-            Terminer quand même
+            Terminer
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

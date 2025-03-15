@@ -12,6 +12,7 @@ import { Program } from '@/types/program'
 import { Plus } from 'lucide-react'
 import { useActiveProgram } from '@/lib/hooks/useActiveProgram'
 import { useToast } from '@/components/ui/use-toast'
+import { initializeCalgaryProgram } from '@/lib/firebase/programs'
 
 export default function ProgramsPage() {
   const { user } = useAuth()
@@ -20,25 +21,25 @@ export default function ProgramsPage() {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
-  useEffect(() => {
-    const fetchPrograms = async () => {
-      if (!user) return
+  const fetchPrograms = async () => {
+    if (!user) return
 
-      try {
-        const q = query(collection(db, 'programs'), where('createdBy', '==', user.uid))
-        const querySnapshot = await getDocs(q)
-        const programsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as (Program & { id: string })[]
-        setPrograms(programsData)
-      } catch (error) {
-        console.error('Erreur lors de la récupération des programmes:', error)
-      } finally {
-        setLoading(false)
-      }
+    try {
+      const q = query(collection(db, 'programs'), where('createdBy', '==', user.uid))
+      const querySnapshot = await getDocs(q)
+      const programsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as (Program & { id: string })[]
+      setPrograms(programsData)
+    } catch (error) {
+      console.error('Erreur lors de la récupération des programmes:', error)
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchPrograms()
   }, [user])
 
@@ -58,18 +59,45 @@ export default function ProgramsPage() {
     }
   }
 
+  const handleInitializeCalgary = async () => {
+    if (!user) return
+
+    try {
+      const programId = await initializeCalgaryProgram(user.uid)
+      await handleSetActive(programId)
+      toast({
+        title: "Programme Calgary initialisé",
+        description: "Le programme Calgary a été créé et défini comme actif.",
+      })
+      // Recharger la liste des programmes
+      fetchPrograms()
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'initialisation du programme Calgary.",
+      })
+    }
+  }
+
   return (
     <AuthGuard>
       <div className="min-h-screen bg-background">
         <div className="container mx-auto p-4">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold">Mes Programmes</h1>
-            <Link href="/programs/create">
-              <Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleInitializeCalgary}>
                 <Plus className="h-4 w-4 mr-2" />
-                Créer un programme
+                Initialiser Calgary
               </Button>
-            </Link>
+              <Link href="/programs/create">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer un programme
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {loading ? (

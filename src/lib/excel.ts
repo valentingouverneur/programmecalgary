@@ -3,6 +3,7 @@ import type { Program, Week, Day, Exercise } from '@/types/program'
 import fs from 'fs'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
+import { programTemplates } from './templates/programs'
 
 const TEMPLATE_STRUCTURE = {
   headers: [
@@ -148,127 +149,23 @@ export async function importCalgaryProgram(): Promise<Program> {
   try {
     console.log('Début de l\'importation du programme Calgary')
     
-    // Utiliser fetch pour récupérer le fichier Excel
-    const response = await fetch('/Copie de Calgary Barbell 16 Week (Revised) LB + KG _ LiftVault.com.xlsx')
-    if (!response.ok) {
-      throw new Error(`Erreur lors de la récupération du fichier Excel: ${response.statusText}`)
-    }
-    
-    const arrayBuffer = await response.arrayBuffer()
-    const data = new Uint8Array(arrayBuffer)
-    const workbook = read(data, { type: 'array' })
-    
-    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-      throw new Error('Le fichier Excel est vide')
+    // Utiliser le template au lieu du fichier Excel
+    const calgaryTemplate = programTemplates.find(t => t.id === 'calgary-barbell-16-week')
+    if (!calgaryTemplate) {
+      throw new Error('Template Calgary non trouvé')
     }
 
-    const program: Program = {
+    return {
       id: uuidv4(),
-      name: 'Calgary Barbell 16 Week Program',
-      description: 'Programme de force sur 16 semaines',
-      goal: 'Force',
-      equipment: 'Full Gym',
-      weeks: [],
+      name: calgaryTemplate.name,
+      description: calgaryTemplate.description,
+      goal: calgaryTemplate.goal,
+      equipment: calgaryTemplate.equipment,
+      weeks: calgaryTemplate.program.weeks,
       createdBy: 'system',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
-
-    for (const sheetName of workbook.SheetNames) {
-      console.log('Traitement de la feuille:', sheetName)
-      const worksheet = workbook.Sheets[sheetName]
-      const rawData = utils.sheet_to_json<ExcelRow>(worksheet)
-      
-      let currentWeek = 1
-      let currentDay = 1
-      let exercises: Exercise[] = []
-      
-      for (const row of rawData) {
-        // Check if this row indicates a new week
-        if (row.__EMPTY && typeof row.__EMPTY === 'string' && row.__EMPTY.toLowerCase().includes('week')) {
-          const weekMatch = row.__EMPTY.match(/week\s+(\d+)/i)
-          if (weekMatch) {
-            currentWeek = parseInt(weekMatch[1])
-            currentDay = 1
-            console.log('Nouvelle semaine détectée:', currentWeek)
-            continue
-          }
-        }
-        
-        // Check if this row indicates a new day
-        if (row.__EMPTY && typeof row.__EMPTY === 'string' && row.__EMPTY.toLowerCase().includes('day')) {
-          const dayMatch = row.__EMPTY.match(/day\s+(\d+)/i)
-          if (dayMatch) {
-            currentDay = parseInt(dayMatch[1])
-            console.log('Nouveau jour détecté:', currentDay)
-            continue
-          }
-        }
-        
-        // Parse exercise data
-        if (row.__EMPTY && typeof row.__EMPTY === 'string' && !row.__EMPTY.toLowerCase().includes('exercise')) {
-          console.log('Analyse de l\'exercice:', row.__EMPTY)
-          const exercise: Exercise = {
-            name: row.__EMPTY,
-            sets: parseInt(row.__EMPTY_1 as string) || 0,
-            reps: (row.__EMPTY_2 as string)?.toString() || '0',
-            intensity: parseInt(row.__EMPTY_3 as string) || 0
-          }
-          
-          if (exercise.intensity) {
-            exercise.weight = {
-              type: 'percentage',
-              value: exercise.intensity
-            }
-          }
-          
-          exercises.push(exercise)
-        }
-        
-        // If we have exercises and encounter a new section, add them to the program
-        if (exercises.length > 0 && (!row.__EMPTY || (typeof row.__EMPTY === 'string' && (row.__EMPTY.toLowerCase().includes('week') || row.__EMPTY.toLowerCase().includes('day'))))) {
-          let week = program.weeks.find(w => w.number === currentWeek)
-          if (!week) {
-            week = {
-              number: currentWeek,
-              days: []
-            }
-            program.weeks.push(week)
-          }
-          
-          let day = week.days.find(d => d.number === currentDay)
-          if (!day) {
-            day = {
-              number: currentDay,
-              exercises: []
-            }
-            week.days.push(day)
-          }
-          
-          day.exercises.push(...exercises)
-          exercises = []
-        }
-      }
-    }
-    
-    // Sort weeks and days
-    program.weeks.sort((a, b) => a.number - b.number)
-    program.weeks.forEach(week => {
-      week.days.sort((a, b) => a.number - b.number)
-    })
-    
-    if (program.weeks.length === 0) {
-      throw new Error('Aucune semaine n\'a été trouvée dans le programme')
-    }
-    
-    console.log('Programme généré avec succès:', {
-      weeks: program.weeks.length,
-      days: program.weeks.reduce((acc, week) => acc + week.days.length, 0),
-      exercises: program.weeks.reduce((acc, week) => 
-        acc + week.days.reduce((dacc, day) => dacc + day.exercises.length, 0), 0)
-    })
-    
-    return program
   } catch (error) {
     console.error('Erreur lors de l\'importation du programme:', error)
     throw error

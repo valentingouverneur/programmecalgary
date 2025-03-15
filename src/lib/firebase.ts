@@ -1,7 +1,7 @@
 'use client'
 
 import { initializeApp, getApps, getApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth'
 import { getFirestore, setDoc, doc } from 'firebase/firestore'
 import { ExerciseMax } from '@/types/user'
 
@@ -24,6 +24,11 @@ if (!getApps().length) {
 
 // Initialize Auth and Firestore
 const auth = getAuth(app)
+setPersistence(auth, browserLocalPersistence)
+  .catch((error) => {
+    console.error("Erreur lors de la configuration de la persistance:", error)
+  })
+
 const db = getFirestore(app)
 
 export const initializeMaxScores = async (userId: string): Promise<ExerciseMax[]> => {
