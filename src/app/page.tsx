@@ -123,7 +123,7 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.from({ length: exercise.sets }).map((_, setIndex) => {
+                    {Array.from({ length: Number(exercise.sets) }).map((_, setIndex) => {
                       const targetWeight = calculateWeight(exercise)
                       return (
                         <tr key={setIndex} className="border-t">
