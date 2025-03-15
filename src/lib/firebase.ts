@@ -3,6 +3,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
+import { ExerciseMax } from '@/types/user'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -24,5 +25,14 @@ if (!getApps().length) {
 // Initialize Auth and Firestore
 const auth = getAuth(app)
 const db = getFirestore(app)
+
+export const initializeMaxScores = (): ExerciseMax[] => {
+  const now = new Date().toISOString()
+  return [
+    { exerciseName: 'Squat', maxWeight: 0, updatedAt: now },
+    { exerciseName: 'Bench Press', maxWeight: 0, updatedAt: now },
+    { exerciseName: 'Deadlift', maxWeight: 0, updatedAt: now }
+  ]
+}
 
 export { app, auth, db } 

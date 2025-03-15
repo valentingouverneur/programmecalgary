@@ -3,7 +3,6 @@ import type { Program, Week, Day, Exercise } from '@/types/program'
 import fs from 'fs'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
-import xlsx from 'xlsx'
 
 const TEMPLATE_STRUCTURE = {
   headers: [
@@ -157,33 +156,28 @@ export async function importCalgaryProgram(): Promise<Program> {
     
     const arrayBuffer = await response.arrayBuffer()
     const data = new Uint8Array(arrayBuffer)
-    const workbook = xlsx.read(data, { type: 'array' })
+    const workbook = read(data, { type: 'array' })
     
     if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-      throw new Error('Le fichier Excel ne contient aucune feuille')
+      throw new Error('Le fichier Excel est vide')
     }
-    
-    console.log('Feuilles trouvées:', workbook.SheetNames)
-    
+
     const program: Program = {
       id: uuidv4(),
       name: 'Calgary Barbell 16 Week Program',
-      description: 'A 16-week powerlifting program focused on competition preparation',
-      goal: 'Powerlifting',
-      equipment: 'Barbell, Bench, Rack, Plates',
+      description: 'Programme de force sur 16 semaines',
+      goal: 'Force',
+      equipment: 'Full Gym',
       weeks: [],
       createdBy: 'system',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
 
-    // Skip the first sheet (Training Maxes)
-    const sheetNames = workbook.SheetNames.filter(name => name !== 'Training Maxes')
-    
-    for (const sheetName of sheetNames) {
+    for (const sheetName of workbook.SheetNames) {
       console.log('Traitement de la feuille:', sheetName)
       const worksheet = workbook.Sheets[sheetName]
-      const rawData = xlsx.utils.sheet_to_json<ExcelRow>(worksheet)
+      const rawData = utils.sheet_to_json<ExcelRow>(worksheet)
       
       let currentWeek = 1
       let currentDay = 1
