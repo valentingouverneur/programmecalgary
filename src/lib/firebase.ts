@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore, setDoc, doc } from 'firebase/firestore'
 import { ExerciseMax } from '@/types/user'
 
 const firebaseConfig = {
@@ -26,13 +26,19 @@ if (!getApps().length) {
 const auth = getAuth(app)
 const db = getFirestore(app)
 
-export const initializeMaxScores = (): ExerciseMax[] => {
+export const initializeMaxScores = async (userId: string): Promise<ExerciseMax[]> => {
   const now = new Date().toISOString()
-  return [
+  const initialMaxes = [
     { exerciseName: 'Squat', maxWeight: 0, updatedAt: now },
     { exerciseName: 'Bench Press', maxWeight: 0, updatedAt: now },
     { exerciseName: 'Deadlift', maxWeight: 0, updatedAt: now }
   ]
+
+  await setDoc(doc(db, 'maxScores', userId), {
+    exerciseMaxes: initialMaxes
+  })
+
+  return initialMaxes
 }
 
 export { app, auth, db } 
