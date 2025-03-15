@@ -14,6 +14,23 @@ import { db } from '@/lib/firebase'
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore'
 import { ExerciseMax } from '@/types/user'
 import { getMainExercise } from '@/lib/exerciseMapping'
+import { WorkoutDialog } from '@/components/workout/WorkoutDialog'
+
+interface SetValue {
+  weight: number
+  reps: number
+}
+
+interface WorkoutSummary {
+  duration: string
+  totalSets: number
+  totalVolume: number
+  personalRecords: Array<{
+    exerciseName: string
+    type: 'weight' | 'reps' | 'volume'
+    value: number
+  }>
+}
 
 export default function Home() {
   const { user } = useAuth()
@@ -21,7 +38,12 @@ export default function Home() {
   const [timer, setTimer] = useState('00:00')
   const { activeProgram, maxScores, loading: activeProgramLoading } = useActiveProgram()
   const [completedSets, setCompletedSets] = useState<Record<string, boolean[]>>({})
-  const [setValues, setSetValues] = useState<Record<string, { weight: number; reps: number }[]>>({})
+  const [setValues, setSetValues] = useState<Record<string, SetValue[]>>({})
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [isFinishDialog, setIsFinishDialog] = useState(false)
+  const [workoutStartTime] = useState<Date>(new Date())
+  const [incompleteSets, setIncompleteSets] = useState<Array<{ exerciseName: string, setsRemaining: number }>>([])
+  const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | undefined>(undefined)
 
   useEffect(() => {
     const checkAuth = setTimeout(() => {
@@ -45,7 +67,7 @@ export default function Home() {
           
           // Convertir les séries en état local
           const newCompletedSets: Record<string, boolean[]> = {}
-          const newSetValues: Record<string, { weight: number; reps: number }[]> = {}
+          const newSetValues: Record<string, SetValue[]> = {}
           
           sets.forEach((set: any) => {
             const exerciseIndex = activeProgram.weeks[0].days[0].exercises.findIndex(
@@ -101,8 +123,11 @@ export default function Home() {
   }
 
   // Fonction pour valider une série
-  const validateSet = async (exerciseIndex: number, setIndex: number, weight: number, reps: number) => {
-    if (!user || !activeProgram) return
+  const validateSet = async (exerciseIndex: number, setIndex: number, weight: string | number, reps: string | number) => {
+    const weightNum = Number(weight)
+    const repsNum = Number(reps)
+
+    if (!user || !activeProgram || isNaN(weightNum) || isNaN(repsNum)) return
 
     try {
       // Mettre à jour l'état local
@@ -116,12 +141,26 @@ export default function Home() {
         return newSets
       })
 
+      // Mettre à jour les valeurs
+      setSetValues(prev => {
+        const exerciseKey = `exercise_${exerciseIndex}`
+        const newValues = { ...prev }
+        if (!newValues[exerciseKey]) {
+          newValues[exerciseKey] = []
+        }
+        newValues[exerciseKey][setIndex] = {
+          weight: weightNum,
+          reps: repsNum
+        }
+        return newValues
+      })
+
       // Créer l'objet de données pour la série
       const setData = {
         exerciseName: activeProgram.weeks[0].days[0].exercises[exerciseIndex].name,
         setNumber: setIndex + 1,
-        weight,
-        reps,
+        weight: weightNum,
+        reps: repsNum,
         timestamp: Timestamp.now(),
         programId: activeProgram.id,
         week: 1,
@@ -139,8 +178,120 @@ export default function Home() {
 
     } catch (error) {
       console.error('Erreur lors de la sauvegarde de la série:', error)
-      // TODO: Afficher une notification d'erreur à l'utilisateur
     }
+  }
+
+  const calculateWorkoutDuration = () => {
+    const endTime = new Date()
+    const durationInMinutes = Math.round((endTime.getTime() - workoutStartTime.getTime()) / (1000 * 60))
+    return `${Math.floor(durationInMinutes / 60)}h${durationInMinutes % 60}min`
+  }
+
+  const calculateTotalVolume = (): number => {
+    return Object.values(setValues).reduce((total, sets) => {
+      return total + sets.reduce((setTotal, set) => {
+        if (set) {
+          return setTotal + (set.weight * set.reps)
+        }
+        return setTotal
+      }, 0)
+    }, 0)
+  }
+
+  const handleFinishClick = async () => {
+    if (!user || !activeProgram) return
+
+    // Vérifier les séries incomplètes
+    const incompleteExercises: Array<{ exerciseName: string, setsRemaining: number }> = []
+    
+    activeProgram.weeks[0].days[0].exercises.forEach((exercise, index) => {
+      const completedSetsCount = completedSets[`exercise_${index}`]?.filter(Boolean).length || 0
+      if (completedSetsCount < exercise.sets) {
+        incompleteExercises.push({
+          exerciseName: exercise.name,
+          setsRemaining: exercise.sets - completedSetsCount
+        })
+      }
+    })
+
+    if (incompleteExercises.length > 0) {
+      setIncompleteSets(incompleteExercises)
+      setIsFinishDialog(false)
+      setDialogOpen(true)
+      return
+    }
+
+    await finishWorkout()
+  }
+
+  const finishWorkout = async (skipRemaining = false) => {
+    if (!user || !activeProgram) return
+
+    try {
+      const workoutRef = doc(db, 'users', user.uid, 'workouts', new Date().toISOString().split('T')[0])
+      
+      // Calculer les statistiques
+      const duration = calculateWorkoutDuration()
+      const totalVolume = calculateTotalVolume()
+      const totalSets = Object.values(completedSets).reduce(
+        (acc, sets) => acc + (sets?.filter(Boolean).length || 0),
+        0
+      )
+
+      // Créer le résumé
+      const summary: WorkoutSummary = {
+        duration,
+        totalSets,
+        totalVolume,
+        personalRecords: [] // TODO: Implémenter la détection des records
+      }
+
+      // Sauvegarder le workout
+      await setDoc(workoutRef, {
+        programId: activeProgram.id,
+        programName: activeProgram.name,
+        week: 1,
+        day: 1,
+        completedAt: Timestamp.now(),
+        duration: duration,
+        stats: {
+          totalSets,
+          totalVolume,
+          personalRecords: []
+        }
+      }, { merge: true })
+
+      // Mettre à jour la progression du programme
+      const userProgramRef = doc(db, 'users', user.uid, 'programs', activeProgram.id)
+      await setDoc(userProgramRef, {
+        currentWeek: 1,
+        currentDay: 2,
+        lastUpdated: Timestamp.now()
+      }, { merge: true })
+
+      // Afficher le résumé
+      setWorkoutSummary(summary)
+      setIsFinishDialog(true)
+      setDialogOpen(true)
+
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde du workout:', error)
+      // TODO: Afficher une notification d'erreur
+    }
+  }
+
+  const handleContinueWorkout = () => {
+    setDialogOpen(false)
+  }
+
+  const handleSkipRemaining = async () => {
+    await finishWorkout(true)
+  }
+
+  const handleGoToNextDay = () => {
+    // TODO: Rediriger vers le jour suivant
+    setDialogOpen(false)
+    window.location.reload()
   }
 
   if (loading) {
@@ -192,7 +343,10 @@ export default function Home() {
                 )}
               </div>
             </div>
-            <button className="px-4 py-2 rounded-lg transition-colors duration-200 bg-[#6366F1] hover:bg-[#6366F1]/90 text-white font-semibold">
+            <button 
+              className="px-4 py-2 rounded-lg transition-colors duration-200 bg-[#6366F1] hover:bg-[#6366F1]/90 text-white font-semibold"
+              onClick={handleFinishClick}
+            >
               Terminer
             </button>
           </div>
@@ -272,7 +426,7 @@ export default function Home() {
                                   const weightInput = document.querySelector(`#weight_${index}_${setIndex}`) as HTMLInputElement
                                   const repsInput = document.querySelector(`#reps_${index}_${setIndex}`) as HTMLInputElement
                                   if (weightInput?.value && repsInput?.value) {
-                                    validateSet(index, setIndex, Number(weightInput.value), Number(repsInput.value))
+                                    validateSet(index, setIndex, weightInput.value, repsInput.value)
                                   }
                                 }}
                               >
@@ -297,6 +451,17 @@ export default function Home() {
             </a>
           </div>
         )}
+
+        <WorkoutDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          incompleteSets={incompleteSets}
+          onContinue={handleContinueWorkout}
+          onSkip={handleSkipRemaining}
+          onFinish={isFinishDialog ? handleGoToNextDay : handleSkipRemaining}
+          isFinishDialog={isFinishDialog}
+          workoutSummary={workoutSummary || undefined}
+        />
       </div>
 
       <div className="fixed bottom-4 right-4">
